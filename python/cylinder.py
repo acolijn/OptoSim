@@ -4,7 +4,7 @@ class cylinder:
 
     def __init__(self, **kwargs):
         """
-        Initialize a cylinder
+        Initialize a cylinder - really
 
         :param kwargs: R = radius,
                        h = height
