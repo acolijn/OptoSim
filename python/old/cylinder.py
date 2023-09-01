@@ -9,7 +9,7 @@ class cylinder:
         :param kwargs: R = radius,
                        h = height
         
-                          yooo
+                        
         """ 
 
         self.radius = kwargs.pop('R',-1.0)
