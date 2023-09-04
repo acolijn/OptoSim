@@ -7,12 +7,12 @@ XENON_LIQ = 1
 PTFE = 2
 PMT = 3
 
-refractive_index = np.array([1., 1.5, 1.38, 3.5])
+refractive_index = np.array([1., 1.6, 1.38, 3.5])
 
 class OpticalPhoton:
     """
     Class to propagate an optical photon through a simplified version of a XENON detector To keep things simple, 
-    the detector is modelled as a cylinder with a flat top and bottom.
+    the detector is modelled as a cylinder with a flat top and bottom. The liquid level is hard-coded to be at z=0.
 
     In addition, the code is not segmented into separate classes in order to keep the code fast and simple.
 
