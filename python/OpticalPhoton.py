@@ -7,7 +7,7 @@ XENON_LIQ = 1
 PTFE = 2
 PMT = 3
 
-refractive_index = np.array([1, 1.6, 1.38, 3.5])
+refractive_index = np.array([1., 1.5, 1.38, 3.5])
 
 class OpticalPhoton:
     """
@@ -20,7 +20,20 @@ class OpticalPhoton:
     """
     def __init__(self, **kwargs):
         """
-        _summary_
+        Initialize the optical photon
+
+        Parameters
+        ----------
+        R(float) : float
+            The radius of the detector
+        ztop(float) : float
+            The z-coordinate of the top of the detector
+        zliq(float) : float
+            The z-coordinate of the liquid-gas interface
+        zbot(float) : float
+            The z-coordinate of the bottom of the detector
+
+        A.P. Colijn
 
         """
 
@@ -37,7 +50,24 @@ class OpticalPhoton:
         self.tc = np.zeros(3)
 
         self.current_medium = XENON_GAS
+        self.alive = True
+        self.detected = False
 
+        # special case to switch off scattering
+        self.no_scattering = False
+
+    def set_no_scattering(self, no_scattering):
+        """
+        Switch off scattering
+
+        Parameters
+        ----------
+        no_scattering(bool) : bool
+            Switch off scattering
+
+        A.P. Colijn
+        """
+        self.no_scattering = no_scattering
 
     def set_photon_position(self, x):
         """
@@ -51,6 +81,19 @@ class OpticalPhoton:
         A.P. Colijn
         """
         self.x = x
+    
+    def get_photon_position(self):
+        """
+        Get the photon position
+
+        Returns
+        -------
+        x(float) : array_like
+            The position of the photon
+
+        A.P. Colijn
+        """
+        return self.x
 
     def get_medium(self, x):
         """
@@ -133,12 +176,36 @@ class OpticalPhoton:
         self.set_photon_position(self.x0)
         # the photon is alive...
         self.alive = True
+        self.detected = False
 
         # Set the current medium
         self.set_medium()
 
         return 
 
+    def is_alive(self):
+        """
+        Check if the photon is alive
+
+        Returns
+        -------
+        alive(bool) : bool
+
+        A.P. Colijn
+        """
+        return self.alive
+    
+    def is_detected(self):
+        """
+        Check if the photon is detected
+
+        Returns
+        -------
+        detected(bool) : bool
+
+        A.P. Colijn
+        """
+        return self.detected    
 
     def intersection_with_cylinder(self, x, t, R, zb, zt):
         """Finds intersection of straight line photon trajectory with cylinder. Only intersections 
@@ -247,9 +314,10 @@ class OpticalPhoton:
         return refractive_index[medium]
     
     def interact_with_surface(self, xint, nvec):
-        """Calculates the reflection and transmission coefficients for the photon at the surface. The reflection 
-        and transmission coefficients are calculated using the Fresnel equations. The reflected and transmitted 
-        rays are calculated using the Snell's law.
+        """Calculates the interaction of the photon with a surface. The photon is either reflected or transmitted.
+        After the interaction, the position and direction of the photon are updated as well as the medium.
+
+
 
         Args:
             xint (array): intersection point
@@ -278,10 +346,10 @@ class OpticalPhoton:
 
         # 5. decide whether the photon is reflected or transmitted based on the reflected power
 
-        print('x before scatter =', xint,'direction before scatter', self.t, 'medium before scatter', medium1, 'medium after scatter', medium2, 'r_average', R_average)
+        ##print('x before scatter =', xint,'direction before scatter', self.t, 'medium before scatter', medium1, 'medium after scatter', medium2, 'r_average', R_average)
         if random.uniform(0, 1) < R_average:
             # reflected
-            print("reflected")
+            # print("reflected")
             # 6. calculate the reflected direction
             in_dir = self.t
             dot_product = np.dot(-in_dir, nvec)
@@ -291,17 +359,25 @@ class OpticalPhoton:
             self.x = xint
         else:
             # transmitted
-            print("transmitted")
+            # print("transmitted")
             # 6. calculate the transmitted direction
+            
+            #if abs(xint[2])<0.1:
+                #print("")
+                #print("before. R_average = ", R_average)
+                #self.print()            
             in_dir = self.t
             dot_product = np.dot(-in_dir, nvec)
             refracted_dir = (n1 / n2) * (in_dir + dot_product * nvec) - np.sqrt(1.0 - (n1 / n2)**2 * (1.0 - dot_product**2)) * nvec
-            # medium does not change.....
+
             self.t = refracted_dir
             self.x = xint
             self.current_medium = medium2
+            #if abs(xint[2])<0.1:
+            #    print("after norm",np.linalg.norm(self.t))
+            #    self.print()  
 
-        print("x after scatter = ", self.x, "direction after scatter", self.t, "medium after scatter", self.current_medium)
+        ##print("x after scatter = ", self.x, "direction after scatter", self.t, "medium after scatter", self.current_medium)
 
         return 0
 
@@ -339,7 +415,7 @@ class OpticalPhoton:
         cos_theta_i = np.cos(theta_i)
         cos_theta_t = np.sqrt(1.0 - sin_theta_t**2)
 
-        print('cos_theta_i', cos_theta_i, 'cos_theta_t', cos_theta_t,'n1',n1,'n2',n2)
+        ##print('cos_theta_i', cos_theta_i, 'cos_theta_t', cos_theta_t,'n1',n1,'n2',n2)
 
         # Calculate the coefficients for p-polarization
         r_parallel = ((n1 * cos_theta_i - n2 * cos_theta_t) /
@@ -387,20 +463,86 @@ class OpticalPhoton:
         """
 
         propagating = True
-        
+        #print("")
+        #print("NEXT")    
+
+        #self.print()    
         while propagating:
-            print("")
-            print("NEXT")
+
             # intersection with cylinder
             if self.current_medium == XENON_GAS:
                 xint, path_length, nvec = self.intersection_with_cylinder(self.x, self.t, self.R, self.zliq, self.ztop)
             else:
                 xint, path_length, nvec = self.intersection_with_cylinder(self.x, self.t, self.R, self.zbot, self.zliq)
 
-            # use the Fresnel equations to calculate the reflection and transmission coefficients
+            #
+            # Let the photon interact with a surface
+            # 
+            # Several things can happen:
+            # 1. the photon is reflected
+            # 2. the photon is transmitted
+            # 3. the photon is absorbed (not implemented yet - depends on mean free path of photons in xenon gas and liquid)
+            # 4. if the photon is transmitted to the PMT, it is absorbed and detected
+            # 5. if the photon is transmitted to the PTFE, it is terminated
+            # 
+            # The position and direction of the photon are updated after the interaction.
+            #
             self.interact_with_surface(xint, nvec)
+            #self.print()
+            #
+            # Check if the photon should continue propagating, be terminated, or be detected
+            #
+            propagating = self.photon_propagation_status()
 
-            propagating = False
-
+        #print('alive =',self.alive, 'detected =',self.detected, 'x =', self.x, 't =', self.t, 'medium =', self.current_medium)
         return 0
 
+    def photon_propagation_status(self):
+        """
+        Check if the photon should continue propagating, be terminated, or be detected
+
+        Returns
+        -------
+        propagating(bool) : bool
+
+        A.P. Colijn
+        """
+        # Check if the photon is still alive
+        if not self.alive:
+            return False
+        
+        # special case -> scattering totally switched OFF. To compare the standard case with the case where scattering is switched off.
+        if self.no_scattering:
+            if self.current_medium == PMT:
+                # photon is detected
+                self.alive = False
+                self.detected = True
+                return False
+            else:
+                self.alive = False
+                self.detected = False
+                # photon is still propagating
+                return False
+
+        # Check if the photon is still inside the detector
+        if self.current_medium == PMT:
+            # photon is detected
+            self.alive = False
+            self.detected = True
+            return False
+        elif self.current_medium == PTFE:
+            # photon is terminated
+            self.alive = False
+            return False
+        else:
+            # photon is still propagating
+            return True
+        
+    def print(self):
+        """
+        Print the photon position and direction
+
+        A.P. Colijn
+        """
+        print('x =', self.x, 't =', self.t, 'medium =', self.current_medium)
+        return 0
