@@ -169,7 +169,6 @@ class OpticalPhoton:
         # Create the random unit direction vector t
         self.t0 = np.array([tx, ty, tz])
         self.t = self.t0
-        self.nvec = np.zeros(3)
 
         # Set the initial position
         self.x0 = np.array(x0)
@@ -182,6 +181,19 @@ class OpticalPhoton:
         self.set_medium()
 
         return 
+    
+    def set_photon_direction(self, t):
+        """
+        Set the photon direction
+
+        Parameters
+        ----------
+        t0(float) : array_like
+            The initial direction of the photon
+
+        A.P. Colijn
+        """
+        self.t = t / np.linalg.norm(t)
 
     def is_alive(self):
         """
@@ -313,24 +325,20 @@ class OpticalPhoton:
         """
         return refractive_index[medium]
     
-    def interact_with_surface(self, xint, nvec):
+    def interact_with_surface(self, xint, dir, nvec):
         """Calculates the interaction of the photon with a surface. The photon is either reflected or transmitted.
         After the interaction, the position and direction of the photon are updated as well as the medium.
 
-
-
         Args:
             xint (array): intersection point
+            dir (array): direction of photon
             nvec (array): normal vector to surface  
 
         Returns:
             array, array: reflected ray, transmitted ray
 
         A.P. Colijn
-        """
-
-        self.nvec = nvec
-        
+        """        
         # 1. get the medium in which the photon is propagating
         medium1 = self.current_medium
         n1 = self.get_refractive_index(medium1)
@@ -339,8 +347,14 @@ class OpticalPhoton:
         #   This is a bit of a hack, but it works.
         medium2 = self.get_medium(self.calculate_position(xint, nvec, -1e-4))         
         n2 = self.get_refractive_index(medium2)
+
+        ####if medium2 == PTFE: # test to see the effect of PTFE relfection on the photon propagation
+        ####    # photon is terminated
+        ####    self.alive = False
+        ####    return 0
+
         # 3. calculate the angle of incidence
-        theta1 = math.acos(np.dot(-self.t, nvec))
+        theta1 = math.acos(np.dot(-dir, nvec))
         # 4. calculate the average reflected power. I assume unpolarized light....
         R_average, _ = self.fresnel_coefficients_average(n1, n2, theta1)
 
@@ -357,15 +371,11 @@ class OpticalPhoton:
             # medium does not change.....
             self.t = reflected_dir
             self.x = xint
+
         else:
             # transmitted
             # print("transmitted")
-            # 6. calculate the transmitted direction
-            
-            #if abs(xint[2])<0.1:
-                #print("")
-                #print("before. R_average = ", R_average)
-                #self.print()            
+            # 6. calculate the transmitted direction           
             in_dir = self.t
             dot_product = np.dot(-in_dir, nvec)
             refracted_dir = (n1 / n2) * (in_dir + dot_product * nvec) - np.sqrt(1.0 - (n1 / n2)**2 * (1.0 - dot_product**2)) * nvec
@@ -373,9 +383,7 @@ class OpticalPhoton:
             self.t = refracted_dir
             self.x = xint
             self.current_medium = medium2
-            #if abs(xint[2])<0.1:
-            #    print("after norm",np.linalg.norm(self.t))
-            #    self.print()  
+
 
         ##print("x after scatter = ", self.x, "direction after scatter", self.t, "medium after scatter", self.current_medium)
 
@@ -409,9 +417,12 @@ class OpticalPhoton:
         sin_theta_t = (n1 / n2) * sin_theta_i
 
         # Handle total internal reflection
-        if sin_theta_t > 1.0:
-            return 1.0, 1.0 # Total internal reflection, R=1, T=0
 
+        if sin_theta_t > 1.0:
+            r_parallel = 1.0
+            r_perpendicular = 1.0
+            return r_parallel, r_perpendicular # Total internal reflection, R=1, T=0
+        
         cos_theta_i = np.cos(theta_i)
         cos_theta_t = np.sqrt(1.0 - sin_theta_t**2)
 
@@ -424,6 +435,7 @@ class OpticalPhoton:
         r_perpendicular = ((n2 * cos_theta_i - n1 * cos_theta_t) /
                         (n2 * cos_theta_i + n1 * cos_theta_t))
 
+        #print('r_parallel', r_parallel, 'r_perpendicular', r_perpendicular)
         return r_parallel, r_perpendicular
     
     def fresnel_coefficients_average(self, n1, n2, theta_i):
@@ -487,7 +499,7 @@ class OpticalPhoton:
             # 
             # The position and direction of the photon are updated after the interaction.
             #
-            self.interact_with_surface(xint, nvec)
+            self.interact_with_surface(xint, self.t, nvec)
             #self.print()
             #
             # Check if the photon should continue propagating, be terminated, or be detected
