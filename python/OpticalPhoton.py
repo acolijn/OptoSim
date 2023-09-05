@@ -2,12 +2,20 @@ import numpy as np
 import math
 import random
 
+from ptfe_scatter import *  # import the scattering data
+from ptfe_scatter import generate_lambertian
+
+from sys import exit
+
+# import ptfe_utils
+
 XENON_GAS = 0
 XENON_LIQ = 1
 PTFE = 2
 PMT = 3
 
-refractive_index = np.array([1., 1.6, 1.38, 3.5])
+medium_names = ['GXe', 'LXe', 'PTFE', 'PMT']
+refractive_index = np.array([1., 1.5, 1.69, 3.5])
 
 class OpticalPhoton:
     """
@@ -55,6 +63,22 @@ class OpticalPhoton:
 
         # special case to switch off scattering
         self.no_scattering = False
+
+        # experimental scattering model
+        self.experimental_scatter_model = True
+
+    def set_experimental_scatter_model(self, experimental_scatter_model):
+        """
+        Switch on/off the experimental scattering model for 175 nmphotons on PTFE from GXe/LXe  
+
+        Parameters
+        ----------
+        experimental_scatter_model(bool) : bool
+            Switch on/off the experimental scattering model
+
+        A.P. Colijn
+        """
+        self.experimental_scatter_model = experimental_scatter_model
 
     def set_no_scattering(self, no_scattering):
         """
@@ -125,7 +149,7 @@ class OpticalPhoton:
                 medium = PMT
             else:
                 print('error')
-                exit(0)            
+                exit()         
 
         return medium
 
@@ -171,6 +195,10 @@ class OpticalPhoton:
         self.t = self.t0
 
         # Set the initial position
+        if not self.position_is_inside_detector(x0):
+            print("Error: photon position is outside the detector")
+            exit(0)
+
         self.x0 = np.array(x0)
         self.set_photon_position(self.x0)
         # the photon is alive...
@@ -181,6 +209,31 @@ class OpticalPhoton:
         self.set_medium()
 
         return 
+    
+    def position_is_inside_detector(self, x):
+        """
+        Check if the position x is inside the detector
+
+        Parameters
+        ----------
+        x(float) : array_like
+            The position of the photon
+
+        Returns
+        -------
+        inside(bool) : bool
+
+        A.P. Colijn
+        """
+        r = np.sqrt(x[0]**2 + x[1]**2)
+        if r > self.R:
+            return False
+        else:
+            z = x[2]
+            if (z > self.zliq) and (z < self.ztop):
+                return True
+            else:
+                return False
     
     def set_photon_direction(self, t):
         """
@@ -325,6 +378,17 @@ class OpticalPhoton:
         """
         return refractive_index[medium]
     
+    def get_medium_name(self, medium):  
+        """Returns the name of the medium.
+
+        Args:
+            medium (int): medium
+
+        Returns:
+            string: name of medium
+        """
+        return medium_names[medium]
+
     def interact_with_surface(self, xint, dir, nvec):
         """Calculates the interaction of the photon with a surface. The photon is either reflected or transmitted.
         After the interaction, the position and direction of the photon are updated as well as the medium.
@@ -338,7 +402,7 @@ class OpticalPhoton:
             array, array: reflected ray, transmitted ray
 
         A.P. Colijn
-        """        
+        """    
         # 1. get the medium in which the photon is propagating
         medium1 = self.current_medium
         n1 = self.get_refractive_index(medium1)
@@ -356,19 +420,33 @@ class OpticalPhoton:
         # 3. calculate the angle of incidence
         theta1 = math.acos(np.dot(-dir, nvec))
         # 4. calculate the average reflected power. I assume unpolarized light....
-        R_average, _ = self.fresnel_coefficients_average(n1, n2, theta1)
+        
+        R_diff = -1.0
+        if (medium2 == PTFE) and self.experimental_scatter_model: # PTFE reflection based on experimental data
+            R_average, R_diff, _, _ = scatter_on_ptfe(theta1, medium_names[medium1])
+        else:  # standard Fresnel reflection/transmission
+            R_average, _ = self.fresnel_coefficients_average(n1, n2, theta1)
 
         # 5. decide whether the photon is reflected or transmitted based on the reflected power
 
         ##print('x before scatter =', xint,'direction before scatter', self.t, 'medium before scatter', medium1, 'medium after scatter', medium2, 'r_average', R_average)
-        if random.uniform(0, 1) < R_average:
+        rran = random.uniform(0, 1)
+        if  rran < R_average:
             # reflected
             # print("reflected")
             # 6. calculate the reflected direction
-            in_dir = self.t
-            dot_product = np.dot(-in_dir, nvec)
-            reflected_dir = in_dir + 2 * dot_product * nvec
-            # medium does not change.....
+
+            if (rran < R_diff) and (medium2 == PTFE) and self.experimental_scatter_model:
+                # diffuse reflection
+                reflected_dir = generate_lambertian(nvec)
+
+            else:
+                # specular reflection
+                in_dir = self.t
+                dot_product = np.dot(-in_dir, nvec)
+                reflected_dir = in_dir + 2 * dot_product * nvec
+                # medium does not change.....
+            
             self.t = reflected_dir
             self.x = xint
 
