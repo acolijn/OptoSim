@@ -1,5 +1,5 @@
 import numpy as np
-
+from Utils import generate_lambertian, rotation_matrix_from_z_to_n
 #
 # scattering data for interface between LXe and PTFE
 #
@@ -63,73 +63,8 @@ def scatter_on_ptfe(theta, medium):
         R_spec_spike = np.interp(theta, GXe_x_spec_spike,GXe_y_spec_spike)
     else:
         print('medium must be LXe or GXe')
-        return -1, -1, -1, -1
+        return -1., -1., -1., -1.
 
     R_total = R_diff_lobe + R_spec_lobe + R_spec_spike
 
     return R_total, R_diff_lobe, R_spec_lobe, R_spec_spike
-
-def generate_lambertian(n):
-    """
-    Generates a random unit vector based on Lambert's cosine law
-
-    Parameters
-    ----------
-    n : normal vector
-
-    Returns
-    -------
-    new_unit_vector : new unit vector
-
-    A.P. Colijn
-    """
-    # Generate a random azimuthal angle phi
-    phi = 2 * np.pi * np.random.rand()
-
-    # Generate a random cos(theta) value following Lambert's cosine law
-    theta = np.arcsin(np.random.uniform(0, 1)) 
-    cos_theta = np.cos(theta)
-
-    # Calculate the new unit vector based on spherical coordinates
-    sin_theta = np.sin(theta)
-    x = sin_theta * np.cos(phi)
-    y = sin_theta * np.sin(phi)
-    z = cos_theta
-
-    # Calculate the transformation matrix to rotate the vector onto n
-    rotation_matrix = rotation_matrix_from_z_to_n(n)
-
-    # Rotate the vector onto n
-    new_unit_vector = np.dot(rotation_matrix, np.array([x, y, z]))
-
-    return new_unit_vector
-
-def rotation_matrix_from_z_to_n(n):
-    """
-    Calculates the rotation matrix to rotate the z-axis onto the vector n
-
-    Parameters
-    ----------
-    n : normal vector
-
-    Returns
-    -------
-    rotation_matrix : rotation matrix
-
-    A.P. Colijn
-    """
-    # Ensure n is a unit vector
-    n = n / np.linalg.norm(n)
-
-    # Calculate the rotation axis and angle
-    rotation_axis = np.cross([0, 0, 1], n)
-    rotation_angle = np.arccos(np.dot([0, 0, 1], n))
-
-    # Calculate the rotation matrix using Rodrigues' formula
-    K = np.array([[0, -rotation_axis[2], rotation_axis[1]],
-                  [rotation_axis[2], 0, -rotation_axis[0]],
-                  [-rotation_axis[1], rotation_axis[0], 0]])
-
-    rotation_matrix = np.eye(3) + np.sin(rotation_angle) * K + (1 - np.cos(rotation_angle)) * np.dot(K, K)
-
-    return rotation_matrix

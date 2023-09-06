@@ -2,8 +2,8 @@ import numpy as np
 import math
 import random
 
-from ptfe_scatter import *  # import the scattering data
-from ptfe_scatter import generate_lambertian
+from ptfe_scatter import scatter_on_ptfe  # import the scattering data
+from Utils import intersection_with_cylinder, calculate_position, generate_lambertian 
 
 from sys import exit
 
@@ -182,8 +182,8 @@ class OpticalPhoton:
         A.P. Colijn
         """
         # Generate random values for the angles theta and phi
-        phi = random.uniform(0, 2 * math.pi)
-        theta = theta = math.acos(2 * random.uniform(0, 1) - 1)
+        phi = random.uniform(0.0, 2.0 * math.pi)
+        theta = theta = math.acos(2 * random.uniform(0.0, 1.0) - 1.0)
 
         # Calculate the direction vector components
         tx = math.sin(theta) * math.cos(phi)
@@ -230,11 +230,24 @@ class OpticalPhoton:
             return False
         else:
             z = x[2]
-            if (z > self.zliq) and (z < self.ztop):
+            if (z > self.zbot) and (z < self.ztop):
                 return True
             else:
                 return False
-    
+
+    def get_photon_direction(self):
+        """
+        Get the photon direction
+
+        Returns
+        -------
+        t(float) : array_like
+            The direction of the photon
+
+        A.P. Colijn
+        """
+        return self.t
+
     def set_photon_direction(self, t):
         """
         Set the photon direction
@@ -271,101 +284,6 @@ class OpticalPhoton:
         A.P. Colijn
         """
         return self.detected    
-
-    def intersection_with_cylinder(self, x, t, R, zb, zt):
-        """Finds intersection of straight line photon trajectory with cylinder. Only intersections 
-        in the direction of the photon are considered.
-
-        Args:
-            x (array): start point of photon
-            t (array): direction of photon
-            R (float): radius of cylinder
-            zb (float): z of bottom of cylinder
-            zt (float): z of top of cylinder
-
-        Returns:
-            array, float, array: intersection point, path length, normal vector
-        """
-        # Initialize a list of path lengths
-        s = []
-        surface = []
-
-        # Calculate the intersection points with the bottom horizontal plane
-        t_bottom_plane = (zb - x[2]) / t[2]
-        if t_bottom_plane >= 0:
-            s.append(t_bottom_plane)
-            surface.append("bottom")
-
-        # Calculate the intersection points with the top horizontal plane
-        t_top_plane = (zt - x[2]) / t[2]
-        if t_top_plane >= 0:
-            s.append(t_top_plane)
-            surface.append("top")
-
-        # Calculate coefficients for the quadratic equation for the cylinder shell
-        A = t[0]**2 + t[1]**2
-        B = 2 * (x[0] * t[0] + x[1] * t[1])
-        C = x[0]**2 + x[1]**2 - R**2
-
-        # Calculate the discriminant
-        discriminant = B**2 - 4 * A * C
-
-        # Check if there are real solutions for the cylinder shell
-        if discriminant >= 0:
-            # Calculate the solutions for t
-            t1 = (-B + np.sqrt(discriminant)) / (2 * A)
-            if t1 > 0:
-                s.append(t1)
-                surface.append("cylinder")
-            t2 = (-B - np.sqrt(discriminant)) / (2 * A)
-            if t2 > 0:
-                s.append(t2)
-                surface.append("cylinder")
-
-        # Calculate the corresponding intersection points
-        # Only find the intersection point furthest away from the start point. In this way we avoid selecting teh intersection point close to teh starting point
-        # of the photon trajectory is found due to numerical imprecision. This is an isue if teh photon starts on the boundary of a volume.
-        #
-        intersection_points = []
-        margin = 1e-6
-        path_length = -100
-        intersection_point = None
-
-        # we calculate the normal vector to the surface at the intersection point (the normal vector points inward)
-        normal_vec = np.zeros(3)
-
-        for s_i in s:
-            point = self.calculate_position(x, t, s_i)
-            if (zb - margin <= point[2] <= zt +margin) and (point[2] - x[2]) / t[2] >= 0 and  (np.sqrt(point[0]**2 + point[1]**2) <= R + margin):
-                if s_i > path_length:
-                    intersection_point = point 
-                    path_length = s_i
-                    if surface[s.index(s_i)] == "bottom":
-                        normal_vec = np.array([0, 0,  1])
-                    elif surface[s.index(s_i)] == "top":
-                        normal_vec = np.array([0, 0, -1])
-                    else:
-                        len = np.sqrt(point[0]**2 + point[1]**2)
-                        normal_vec = np.array([-point[0] / len, -point[1] / len, 0])                        
-
-        if intersection_points == None:
-            print("No intersection points found")
-            return None, None, None
-
-        return intersection_point, path_length, normal_vec
-    
-    def calculate_position(self, x, t, s):
-        """Calculates the position of the photon after propagating a distance s along the trajectory.
-
-        Args:
-            x (array): start point of photon
-            t (array): direction of photon
-            s (float): distance to propagate
-
-        Returns:
-            array: position of photon after propagating distance s
-        """
-        return (x[0] + s * t[0], x[1] + s * t[1], x[2] + s * t[2])
 
     def get_refractive_index(self, medium):
         """Returns the refractive index of the medium.
@@ -409,7 +327,7 @@ class OpticalPhoton:
         # 2. get the medium on which the photon is incident
         #    calculate the material by stepping into minus the direction of the normal vector to the material we are scattering on. Then get the material at that position.
         #   This is a bit of a hack, but it works.
-        medium2 = self.get_medium(self.calculate_position(xint, nvec, -1e-4))         
+        medium2 = self.get_medium(calculate_position(xint, nvec, -1e-4))         
         n2 = self.get_refractive_index(medium2)
 
         ####if medium2 == PTFE: # test to see the effect of PTFE relfection on the photon propagation
@@ -561,9 +479,9 @@ class OpticalPhoton:
 
             # intersection with cylinder
             if self.current_medium == XENON_GAS:
-                xint, path_length, nvec = self.intersection_with_cylinder(self.x, self.t, self.R, self.zliq, self.ztop)
+                xint, path_length, nvec = intersection_with_cylinder(self.x, self.t, self.R, self.zliq, self.ztop)
             else:
-                xint, path_length, nvec = self.intersection_with_cylinder(self.x, self.t, self.R, self.zbot, self.zliq)
+                xint, path_length, nvec = intersection_with_cylinder(self.x, self.t, self.R, self.zbot, self.zliq)
 
             #
             # Let the photon interact with a surface
