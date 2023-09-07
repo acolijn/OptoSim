@@ -1,6 +1,7 @@
 import numpy as np
 import math
 import random
+import json,os
 
 from ptfe_scatter import scatter_on_ptfe  # import the scattering data
 from Utils import intersection_with_cylinder, calculate_position, generate_lambertian 
@@ -32,6 +33,9 @@ class OpticalPhoton:
 
         Parameters
         ----------
+        config(str) : str
+            The configuration file -> this sets the default values for 
+            the detector geometry.      
         R(float) : float
             The radius of the detector
         ztop(float) : float
@@ -44,11 +48,18 @@ class OpticalPhoton:
         A.P. Colijn
 
         """
+        # Read configuration file
+        self.config_file = kwargs.get('config', 'config.json')
+        if os.path.isfile(self.config_file):
+            print("OpticalPhoton::Reading configuration from file: {}".format(self.config_file))
+            self.config = json.load(open(self.config_file, 'r'))
+        else:
+            raise ValueError("Config file does not exist.")
 
-        self.R = kwargs.get('R', 2.5)
-        self.ztop = kwargs.get('ztop',   1.0)
-        self.zliq = kwargs.get('zliq',   0.0)
-        self.zbot = kwargs.get('zbot', -10.0)
+        self.R = self.config['geometry']['radius']
+        self.ztop = self.config['geometry']['ztop']
+        self.zliq = self.config['geometry']['zliq']
+        self.zbot = self.config['geometry']['zbot']
 
         # initial and current position
         self.x0 = np.zeros(3)

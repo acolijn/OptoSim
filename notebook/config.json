@@ -1,0 +1,13 @@
+{
+    "filename": "dummy.hd5f",
+    "nevents": 100,
+    "nphoton_per_event": 10000,
+    "photon_zgen": 0.1,
+    "geometry":{
+        "type": "cylinder",
+        "radius": 2.5,
+        "ztop": 1.0,
+        "zliq": 0.0,
+        "zbot": -10.0
+    }
+}
