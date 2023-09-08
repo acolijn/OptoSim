@@ -136,7 +136,7 @@ class Generator:
 
         self.close_file() # Close file
 
-        return 0
+        return 0 
 
     def open_file(self, filename):
         """Opens a file for writing events to.
