@@ -21,7 +21,7 @@ refractive_index = np.array([1., 1.5, 1.69, 3.5])
 class OpticalPhoton:
     """
     Class to propagate an optical photon through a simplified version of a XENON detector To keep things simple, 
-    the detector is modelled as a cylinder with a flat top and bottom. The liquid level is hard-coded to be at z=0.
+    the detector is modelled as a cylinder with a flat top and bottom.
 
     In addition, the code is not segmented into separate classes in order to keep the code fast and simple.
 
@@ -35,15 +35,7 @@ class OpticalPhoton:
         ----------
         config(str) : str
             The configuration file -> this sets the default values for 
-            the detector geometry.      
-        R(float) : float
-            The radius of the detector
-        ztop(float) : float
-            The z-coordinate of the top of the detector
-        zliq(float) : float
-            The z-coordinate of the liquid-gas interface
-        zbot(float) : float
-            The z-coordinate of the bottom of the detector
+            the detector geometry. See Generator.py for documentation on the config file.
 
         A.P. Colijn
 
@@ -359,7 +351,11 @@ class OpticalPhoton:
         # 5. decide whether the photon is reflected or transmitted based on the reflected power
 
         ##print('x before scatter =', xint,'direction before scatter', self.t, 'medium before scatter', medium1, 'medium after scatter', medium2, 'r_average', R_average)
-        rran = random.uniform(0, 1)
+        if self.no_scattering:
+            rran = 1.0 # force transmission
+        else:
+            rran = random.uniform(0, 1)
+
         if  rran < R_average:
             # reflected
             # print("reflected")
@@ -530,19 +526,6 @@ class OpticalPhoton:
         if not self.alive:
             return False
         
-        # special case -> scattering totally switched OFF. To compare the standard case with the case where scattering is switched off.
-        if self.no_scattering:
-            if self.current_medium == PMT:
-                # photon is detected
-                self.alive = False
-                self.detected = True
-                return False
-            else:
-                self.alive = False
-                self.detected = False
-                # photon is still propagating
-                return False
-
         # Check if the photon is still inside the detector
         if self.current_medium == PMT:
             # photon is detected
