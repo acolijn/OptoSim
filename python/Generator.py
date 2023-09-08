@@ -13,26 +13,33 @@ class Generator:
         The data structure that is used to store the events is a dictionary with the following
         structure:
         1. The configuration is stored in a dictionary with the following structure:
-            {   'filename': 'filename', output filename
-                'radius': 0,
-                'ztop', 0,
-                'zbot': 0,
-                'zliq': 0,
-                'N_fine': 0,
-                'detector_fine_x': [N_fine x N_fine] x-positions of the fine detector
-                'detector_fine_y': [N_fine x N_fine] y-positions of the fine detector
-                'N_det': 0,
-                'detector_x': [N_det x N_det] x-positions of the real detector
-                'detector_y': [N_det x N_det] y-positions of the real detector
-            }             
+            {
+                "filename": filename of output
+                "nevents": number of events to generate,
+                "nphoton_per_event":  number of photons to generate per event,
+                "photon_zgen": z-position of photon generation,
+                "geometry":{
+                    "type": type of geometry (currently only 'cylinder' is supported),
+                    "radius": radius of cylinder,
+                    "ztop": top of cylinder,
+                    "zliq": liquid level,
+                    "zbot": bottom of cylinder
+                }
+                "npmt_xy": pmt grid size -> 1 = 1x1 grid, 2 = 2x2 grid, etc. (a single 2" hamamatsu multianode PMT should be defined as 2x2 grid!)
+                "pmt":{
+                    "type": type of pmt (currently only 'square' is supported),
+                    "size": size of pmt,
+                    "ndivs": number of divisions in pmt for fine granularity (2 means 2x2 grid, etc.)
+                }
+            }  
 
         2. The per event data is stored in a dictionary with the following structure:
             {           
                 'number': 0,
                 'true_position': [0, 0, 0],
-                'detected_photons_fine': [N_fine x N_fine] for each event. This is the number
+                'detected_photons_fine': [npmt_xy*ndivs x npmt_xy*ndivs] for each event. This is the number
                     of photons detected in the 'fine' detector.
-                'detected_photons_det': [N_det x N_det] for each event. This is the number of 
+                'detected_photons_det': [npmt_xy x npmt_xy] for each event. This is the number of 
                     photons deteccted in the 'real' detector.
             }
 
@@ -57,6 +64,8 @@ class Generator:
 
         # define an optical photon
         self.aPhoton = op.OpticalPhoton(config=self.config_file)
+        self.aPhoton.set_experimental_scatter_model('True')
+        self.aPhoton.set_no_scattering('False')
 
             
     def generate_event(self):
@@ -67,20 +76,50 @@ class Generator:
 
         """
         # Generate random position
+        x0 = self.generate_random_position()
+        offset = self.config['npmt_xy']*self.config['pmt']['size']/2
+
+        pmt_signal = np.zeros((self.config['npmt_xy'], self.config['npmt_xy']), dtype=np.int32)
+        fine_signal = np.zeros((self.config['npmt_xy']*self.config['pmt']['ndivs'], self.config['npmt_xy']*self.config['pmt']['ndivs']), dtype=np.int32)
+        
+        for _ in range(self.config['nphoton_per_event']):
+            # Generate photon at position x0
+            self.aPhoton.generate_photon(x0)
+            self.aPhoton.propagate()
+            if self.aPhoton.is_detected():
+                x = self.aPhoton.get_photon_position()
+                # get bin in x and y
+                ix = int((x[0] + offset) / self.config['pmt']['size'])
+                iy = int((x[1] + offset) / self.config['pmt']['size'])
+                if ix < self.config['npmt_xy'] and iy < self.config['npmt_xy'] and x[2] > 0:
+                    # add photon to bin
+                    pmt_signal[ix, iy] += 1
+                ix_fine = int((x[0] + offset) / (self.config['pmt']['size']/self.config['pmt']['ndivs']))
+                iy_fine = int((x[1] + offset) / (self.config['pmt']['size']/self.config['pmt']['ndivs']))
+                if ix_fine < self.config['npmt_xy']*self.config['pmt']['ndivs'] and iy_fine < self.config['npmt_xy']*self.config['pmt']['ndivs'] and x[2] > 0:
+                    # add photon to bin
+                    fine_signal[ix_fine, iy_fine] += 1
+
+        event_data = {}
+        event_data['number'] = self.ievent
+        event_data['true_position'] = x0
+        event_data['pmt'] = pmt_signal
+        event_data['fine'] = fine_signal
+
+        return event_data
+    
+
+    def generate_random_position(self):
+        """Generates a random position within the detector volume.
+        """
+        # Generate random position
         phi = np.random.uniform(0, 2*np.pi)
         r = self.radius * np.sqrt(np.random.uniform(0, 1))
         x = r * np.cos(phi)
         y = r * np.sin(phi)
         z = self.config['photon_zgen']
 
-        print(x,y,z)
-
-        event_data = {}
-        event_data['number'] = self.ievent
-        event_data['true_position'] = [x, y, z]
-
-        return event_data
-    
+        return [x, y, z]
     
     def generate_batch(self, batch_size):
         """Generates a batch of events. 
