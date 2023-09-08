@@ -376,7 +376,7 @@ class OpticalPhoton:
             self.x = xint
 
         else:
-            # transmitted
+            # transmitted 
             # print("transmitted")
             # 6. calculate the transmitted direction           
             in_dir = self.t
