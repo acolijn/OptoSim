@@ -9,5 +9,11 @@
         "ztop": 1.0,
         "zliq": 0.0,
         "zbot": -10.0
+    },
+    "npmt_xy": 2,
+    "pmt":{
+        "type": "square",
+        "size": 2.54,
+        "ndivs": 5
     }
 }

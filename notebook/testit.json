@@ -1,0 +1,11 @@
+{
+    "filename": "dummy.hd5f",
+    "nevents": 100,
+    "nphoton_per_event": 110000,
+    "geometry": {
+        "radius": 2.5,
+        "ztop": 1.0,
+        "zliq": 0.0,
+        "zbot": -10.0
+    }
+}
