@@ -56,7 +56,7 @@ class Generator:
             print("Generator::Reading configuration from file: {}".format(self.config_file))
             self.config = json.load(open(self.config_file, 'r'))
         else:
-            raise ValueError("Config file does not exist.")
+            raise ValueError("Config file does not exist. {}".format(self.config_file))
         
         # Initialize the detector
         self.radius = self.config['geometry']['radius']
@@ -93,12 +93,12 @@ class Generator:
                 ix = int((x[0] + offset) / self.config['pmt']['size'])
                 iy = int((x[1] + offset) / self.config['pmt']['size'])
                 if ix < self.config['npmt_xy'] and iy < self.config['npmt_xy'] and x[2] > 0:
-                    # add photon to bin
+                    # add photon to pmt bin
                     pmt_signal[ix, iy] += 1
                 ix_fine = int((x[0] + offset) / (self.config['pmt']['size']/self.config['pmt']['ndivs']))
                 iy_fine = int((x[1] + offset) / (self.config['pmt']['size']/self.config['pmt']['ndivs']))
                 if ix_fine < self.config['npmt_xy']*self.config['pmt']['ndivs'] and iy_fine < self.config['npmt_xy']*self.config['pmt']['ndivs'] and x[2] > 0:
-                    # add photon to bin
+                    # add photon to fine bin
                     fine_signal[ix_fine, iy_fine] += 1
 
         event_data = {}
@@ -122,14 +122,16 @@ class Generator:
 
         return [x, y, z]
     
-    def generate_batch(self, batch_size):
+    def generate_batch(self):
         """Generates a batch of events. 
         """
 
+        batch_size = self.config['nevents']
         self.open_file(self.config['filename']) # Open file for writing events to       
 
         for i in range(batch_size):
-            print('Generating event {} of {}'.format(i, batch_size))
+            if i%10 == 0:
+                print('Generating event {} of {}'.format(i, batch_size))
             self.ievent = i
             event = self.generate_event()
             self.write_event(event) # Write event to file
