@@ -146,7 +146,7 @@ class Generator:
         #    raise ValueError("File already exists.")
          
         # Open file
-        self.file = h5py.File(filename, 'w')
+        self.file = h5py.File(filename, 'w') 
         self.file.attrs['config'] = json.dumps(self.config)
 
         # Create group for configuration
