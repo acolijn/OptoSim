@@ -155,11 +155,11 @@ class Generator:
         return 0
     
     def write_event(self, event):
-        """Writes an event to the file.
+        """Writes an even+t to the file.
         """
 
         # Create group for event
-        ev = 'event_{}'.format(self.ievent)
+        ev = 'event_{}'.format(self.ievent) 
         event_group = self.event_group.create_group(ev)
 
         # Write event data
