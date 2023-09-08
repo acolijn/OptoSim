@@ -82,7 +82,7 @@ class OpticalPhoton:
         A.P. Colijn
         """
         self.experimental_scatter_model = experimental_scatter_model
-
+        
     def set_no_scattering(self, no_scattering):
         """
         Switch off scattering

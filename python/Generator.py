@@ -25,7 +25,8 @@ class Generator:
                     "zliq": liquid level,
                     "zbot": bottom of cylinder
                 }
-                "npmt_xy": pmt grid size -> 1 = 1x1 grid, 2 = 2x2 grid, etc. (a single 2" hamamatsu multianode PMT should be defined as 2x2 grid!)
+                "npmt_xy": pmt grid size -> 1 = 1x1 grid, 2 = 2x2 grid, etc. (a single 2" hamamatsu 
+                                        multianode PMT should be defined as 2x2 grid!)
                 "pmt":{
                     "type": type of pmt (currently only 'square' is supported),
                     "size": size of pmt,
@@ -37,9 +38,9 @@ class Generator:
             {           
                 'number': 0,
                 'true_position': [0, 0, 0],
-                'detected_photons_fine': [npmt_xy*ndivs x npmt_xy*ndivs] for each event. This is the number
+                'fine': [npmt_xy*ndivs x npmt_xy*ndivs] for each event. This is the number
                     of photons detected in the 'fine' detector.
-                'detected_photons_det': [npmt_xy x npmt_xy] for each event. This is the number of 
+                'pmt': [npmt_xy x npmt_xy] for each event. This is the number of 
                     photons deteccted in the 'real' detector.
             }
 
@@ -66,8 +67,8 @@ class Generator:
         self.aPhoton = op.OpticalPhoton(config=self.config_file)
         self.aPhoton.set_experimental_scatter_model('True')
         self.aPhoton.set_no_scattering('False')
-
-            
+       
+           
     def generate_event(self):
         """Generates a single event. 
 
@@ -128,7 +129,7 @@ class Generator:
         self.open_file(self.config['filename']) # Open file for writing events to       
 
         for i in range(batch_size):
-
+            print('Generating event {} of {}'.format(i, batch_size))
             self.ievent = i
             event = self.generate_event()
             self.write_event(event) # Write event to file
@@ -163,7 +164,6 @@ class Generator:
 
         # Write event data
         for key in event.keys():
-            print(key)
             event_group[key] = event[key]
 
         return 0    
