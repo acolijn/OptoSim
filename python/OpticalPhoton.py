@@ -76,7 +76,7 @@ class OpticalPhoton:
             self.experimental_scatter_model = self.config['set_experimental_scatter_model']
         else:
             print("'set_experimental_scatter_model' not in config: setting to True")
-            self.experimental_scatter_model(True)
+            self.experimental_scatter_model = True
 
     def set_experimental_scatter_model(self, experimental_scatter_model):
         """
