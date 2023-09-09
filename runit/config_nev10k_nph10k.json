@@ -14,5 +14,7 @@
         "type": "square",
         "size": 2.54,
         "ndivs": 10
-    }
+    },
+    "set_no_scatter": false,
+    "set_experimental_scatter_model": true
 }

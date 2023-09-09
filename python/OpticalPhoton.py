@@ -3,7 +3,7 @@ import math
 import random
 import json,os
 
-from ptfe_scatter import scatter_on_ptfe  # import the scattering data
+from PTFEScatter import scatter_on_ptfe  # import the scattering data
 from Utils import intersection_with_cylinder, calculate_position, generate_lambertian 
 
 from sys import exit
@@ -371,10 +371,12 @@ class OpticalPhoton:
 
             if (rran < R_diff) and (medium2 == PTFE) and self.experimental_scatter_model:
                 # diffuse reflection
+                print('diffuse reflection')
                 reflected_dir = generate_lambertian(nvec)
 
             else:
                 # specular reflection
+                print('specular reflection')
                 in_dir = self.t
                 dot_product = np.dot(-in_dir, nvec)
                 reflected_dir = in_dir + 2 * dot_product * nvec
@@ -385,7 +387,7 @@ class OpticalPhoton:
 
         else:
             # transmitted 
-            # print("transmitted")
+            print("transmitted")
             # 6. calculate the transmitted direction           
             in_dir = self.t
             dot_product = np.dot(-in_dir, nvec)

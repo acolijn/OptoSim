@@ -180,7 +180,9 @@ class Generator:
             if i%10 == 0:
                 print('Generating event {} of {}'.format(i, batch_size))
             self.ievent = i
+            # Generate event
             event = self.generate_event()
+            # Write event to file
             self.write_event(event) # Write event to file
 
         self.close_file() # Close file
