@@ -78,34 +78,62 @@ class Generator:
         """
         # Generate random position
         x0 = self.generate_random_position()
-        offset = self.config['npmt_xy']*self.config['pmt']['size']/2
 
-        pmt_signal = np.zeros((self.config['npmt_xy'], self.config['npmt_xy']), dtype=np.int32)
-        fine_signal = np.zeros((self.config['npmt_xy']*self.config['pmt']['ndivs'], self.config['npmt_xy']*self.config['pmt']['ndivs']), dtype=np.int32)
-        
+        # Get detector parameters
+        offset = self.config['npmt_xy']*self.config['pmt']['size']/2
+        npmt = self.config['npmt_xy']
+        nfine = self.config['npmt_xy']*self.config['pmt']['ndivs']
+        dx = self.config['pmt']['size']
+        dy = self.config['pmt']['size']
+
+        ndivs = self.config['pmt']['ndivs']
+        dx_fine = dx/ndivs
+        dy_fine = dy/ndivs
+        # Initialize pmt signal
+        pmt_signal_top = np.zeros((npmt, npmt), dtype=np.int32)
+        pmt_signal_bot = np.zeros((npmt, npmt), dtype=np.int32)
+
+        # Initialize fine signal
+        fine_signal_top = np.zeros((nfine, nfine), dtype=np.int32)
+        fine_signal_bot = np.zeros((nfine, nfine), dtype=np.int32)
+
+        # Generate photons
         for _ in range(self.config['nphoton_per_event']):
             # Generate photon at position x0
             self.aPhoton.generate_photon(x0)
+            # Propagate photon
             self.aPhoton.propagate()
+            # Check if photon is detected
             if self.aPhoton.is_detected():
+                # get photon position
                 x = self.aPhoton.get_photon_position()
                 # get bin in x and y
-                ix = int((x[0] + offset) / self.config['pmt']['size'])
-                iy = int((x[1] + offset) / self.config['pmt']['size'])
-                if ix < self.config['npmt_xy'] and iy < self.config['npmt_xy'] and x[2] > 0:
-                    # add photon to pmt bin
-                    pmt_signal[ix, iy] += 1
-                ix_fine = int((x[0] + offset) / (self.config['pmt']['size']/self.config['pmt']['ndivs']))
-                iy_fine = int((x[1] + offset) / (self.config['pmt']['size']/self.config['pmt']['ndivs']))
-                if ix_fine < self.config['npmt_xy']*self.config['pmt']['ndivs'] and iy_fine < self.config['npmt_xy']*self.config['pmt']['ndivs'] and x[2] > 0:
-                    # add photon to fine bin
-                    fine_signal[ix_fine, iy_fine] += 1
+                ix = int((x[0] + offset) / dx)
+                iy = int((x[1] + offset) / dy)
+                if ix < npmt and iy < npmt:
+                    if x[2] > 0:
+                        # add photon to pmt bin
+                        pmt_signal_top[ix, iy] += 1
+                    else:
+                        pmt_signal_bot[ix, iy] += 1
+
+                # get bin in x and y
+                ix_fine = int((x[0] + offset) / dx_fine)
+                iy_fine = int((x[1] + offset) / dy_fine)
+                if ix_fine < npmt*ndivs and iy_fine < npmt*ndivs:
+                    if x[2] > 0:
+                        # add photon to fine bin
+                        fine_signal_top[ix_fine, iy_fine] += 1
+                    else:
+                        fine_signal_bot[ix_fine, iy_fine] += 1
 
         event_data = {}
         event_data['number'] = self.ievent
         event_data['true_position'] = x0
-        event_data['pmt'] = pmt_signal
-        event_data['fine'] = fine_signal
+        event_data['pmt_top'] = pmt_signal_top
+        event_data['fine_top'] = fine_signal_top
+        event_data['pmt_bot'] = pmt_signal_bot
+        event_data['fine_bot'] = fine_signal_bot
 
         return event_data
     

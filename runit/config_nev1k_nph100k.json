@@ -1,0 +1,18 @@
+{
+    "nevents": 1000,
+    "nphoton_per_event": 100000,
+    "photon_zgen": 0.1,
+    "geometry":{
+        "type": "cylinder",
+        "radius": 2.5,
+        "ztop": 1.0,
+        "zliq": 0.0,
+        "zbot": -5.0
+    },
+    "npmt_xy": 2,
+    "pmt":{
+        "type": "square",
+        "size": 2.54,
+        "ndivs": 10
+    }
+}

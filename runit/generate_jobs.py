@@ -1,35 +1,23 @@
 import pandas as pd
 import os,sys, json
 
+import argparse
+
 # default configuration
-config = {
-    "filename": "dummy.hd5f",
-    "nevents": 10000,
-    "nphoton_per_event": 10000,
-    "photon_zgen": 0.1,
-    "geometry":{
-        "type": "cylinder",
-        "radius": 2.5,
-        "ztop": 1.0,
-        "zliq": 0.0,
-        "zbot": -5.0
-    },
-    "npmt_xy": 2,
-    "pmt":{
-        "type": "square",
-        "size": 2.54,
-        "ndivs": 10
-    }
-}
-
-def write_script(id):
 
 
-    #
-    # this is the directory where you run teh jobs
-    #
-    run_dir = '/user/z37/OptoSim/runit'
+#
+# this is the directory where you run the jobs
+#
+run_dir = '/user/z37/OptoSim/runit'
 
+#
+# data directory base
+#
+data_base_dir = '/data/xenon/acolijn/optosim/data/'
+
+
+def write_script(run_id, job_id, base_config_file):
     #
     # this is the directory where your scripts will live
     #
@@ -42,20 +30,27 @@ def write_script(id):
         os.system(cmd)
 
     #
+    # read the base configuration file
+    #
+    with open(base_config_file, 'r') as file:
+        config = json.load(file)
+    #
     # copy the config file to the script directory
     #   
-    config_file = "scripts/config{}.json".format(str(id))
-    config["filename"] = "/data/xenon/acolijn/optosim/data/event{}.hd5f".format(str(id))
+    config_file = "scripts/{}.config{:04}.json".format(run_id,job_id)
+
+    # modify the filename
+    data_dir = data_base_dir + run_id
+    config["filename"] = data_dir + "/{}.mc{:04}.hd5f".format(run_id, job_id)
     # Write the dictionary to the JSON file
     with open(config_file, "w") as json_file:
-        json.dump(config, json_file, indent=4)
+        json.dump(config, json_file, indent=4)  
 
     #
     # generate a shell script
     #
-
-    print('start generation of job', id)
-    scriptfile = script_dir+'/job'+str(id)+".sh"
+    print('start generation of job', job_id)
+    scriptfile = script_dir+'/{}.job{:04}.sh'.format(run_id,job_id)
     fout = open(scriptfile,"w")
     fout.write("#/bin/sh \n")
     fout.write("cd " + run_dir + " \n")
@@ -74,16 +69,45 @@ def write_script(id):
         cmd = 'mkdir '+log_dir
         os.system(cmd)
 
-    os.system('qsub -e '+log_dir+' -o '+log_dir+' '+scriptfile)
+    # os.system('qsub -e '+log_dir+' -o '+log_dir+' '+scriptfile)
 
 #
 # main function
 #
-def main():
+def main(argv):
     """Write job shell scripts and submit to the batch system
     """
-    for id in range(10):    
-        write_script(id)
 
+    parser = argparse.ArgumentParser()
+    parser.add_argument('--config', help='Configuration file', default='config.json')
+    parser.add_argument('--force_write', help='Force write to existing data directory', default=False)
+    parser.add_argument('--mcid', help='MC ID', default=0)
+    parser.add_argument('--njobs', help='Number of jobs', default=10)
+    args = parser.parse_args()
+
+    mcid = int(args.mcid)
+    njobs = int(args.njobs)    
+    run_id = 'mc{:04}'.format(mcid)
+    base_config_file = args.config
+
+    data_dir = data_base_dir + run_id
+    if not os.path.exists(data_dir):
+        cmd = 'mkdir '+data_dir
+        os.system(cmd)
+    else:
+        if args.force_write:
+            print('data directory exists, but force_write is True, so continuing')
+        else:
+            print('data directory exists, exiting')
+            sys.exit(0)
+
+    # loop over the number of jobs
+    print(njobs)
+    for job_id in range(njobs):    
+        write_script(run_id, job_id, base_config_file)
+
+#
+# main function
+#
 if __name__ == "__main__":
-    main()
+    main(sys.argv[1:])
