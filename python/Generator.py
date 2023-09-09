@@ -36,12 +36,16 @@ class Generator:
 
         2. The per event data is stored in a dictionary with the following structure:
             {           
-                'number': 0,
-                'true_position': [0, 0, 0],
-                'fine': [npmt_xy*ndivs x npmt_xy*ndivs] for each event. This is the number
-                    of photons detected in the 'fine' detector.
-                'pmt': [npmt_xy x npmt_xy] for each event. This is the number of 
-                    photons deteccted in the 'real' detector.
+                'number': event number,
+                'true_position': true position of event,
+                'fine_top': [npmt_xy*ndivs x npmt_xy*ndivs] for each event. This is the number
+                    of photons detected in the 'fine' detector top.
+                'pmt_top': [npmt_xy x npmt_xy] for each event. This is the number of 
+                    photons deteccted in the 'real' detector top.
+                'fine_bot': [npmt_xy*ndivs x npmt_xy*ndivs] for each event. This is the number
+                    of photons detected in the 'fine' detector bottom.
+                'pmt_bot': [npmt_xy x npmt_xy] for each event. This is the number of 
+                    photons deteccted in the 'real' detector bottom.
             }
 
     """
@@ -65,15 +69,26 @@ class Generator:
 
         # define an optical photon
         self.aPhoton = op.OpticalPhoton(config=self.config_file)
-        self.aPhoton.set_experimental_scatter_model('True')
-        self.aPhoton.set_no_scattering('False')
-       
-           
+
     def generate_event(self):
         """Generates a single event. 
 
         The x,y position of the event is generated from a uniform distribution. The z-position
         is at a fixed value.
+
+        The event data is stored in a dictionary with the following structure:
+            {
+                'number': event number,
+                'true_position': true position of event,
+                'fine_top': [npmt_xy*ndivs x npmt_xy*ndivs] for each event. This is the number
+                    of photons detected in the 'fine' detector top.
+                'pmt_top': [npmt_xy x npmt_xy] for each event. This is the number of
+                    photons deteccted in the 'real' detector top.
+                'fine_bot': [npmt_xy*ndivs x npmt_xy*ndivs] for each event. This is the number  
+                    of photons detected in the 'fine' detector bottom.
+                'pmt_bot': [npmt_xy x npmt_xy] for each event. This is the number of
+                    photons deteccted in the 'real' detector bottom.
+            }
 
         """
         # Generate random position
@@ -101,7 +116,7 @@ class Generator:
         for _ in range(self.config['nphoton_per_event']):
             # Generate photon at position x0
             self.aPhoton.generate_photon(x0)
-            # Propagate photon
+            # Propagate photon.... this is where the magic happens
             self.aPhoton.propagate()
             # Check if photon is detected
             if self.aPhoton.is_detected():
@@ -110,21 +125,25 @@ class Generator:
                 # get bin in x and y
                 ix = int((x[0] + offset) / dx)
                 iy = int((x[1] + offset) / dy)
+                # if in range
                 if ix < npmt and iy < npmt:
                     if x[2] > 0:
-                        # add photon to pmt bin
+                        # add photon to pmt bin in top array
                         pmt_signal_top[ix, iy] += 1
                     else:
+                        # add photon to pmt bin in bottom array
                         pmt_signal_bot[ix, iy] += 1
 
                 # get bin in x and y
                 ix_fine = int((x[0] + offset) / dx_fine)
                 iy_fine = int((x[1] + offset) / dy_fine)
+                # if in range
                 if ix_fine < npmt*ndivs and iy_fine < npmt*ndivs:
                     if x[2] > 0:
-                        # add photon to fine bin
+                        # add photon to fine bin in top array
                         fine_signal_top[ix_fine, iy_fine] += 1
                     else:
+                        # add photon to fine bin in bottom array
                         fine_signal_bot[ix_fine, iy_fine] += 1
 
         event_data = {}

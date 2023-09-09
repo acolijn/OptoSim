@@ -64,11 +64,19 @@ class OpticalPhoton:
         self.alive = True
         self.detected = False
 
-        # special case to switch off scattering
-        self.no_scattering = False
+        if 'set_no_scatter' in self.config:
+            print("'set_no_scatter' set to {}".format(self.config['set_no_scatter']))
+            self.no_scattering = self.config['set_no_scatter']
+        else:
+            print("'set_no_scatter' not in config: setting to False")
+            self.no_scattering = False
 
-        # experimental scattering model
-        self.experimental_scatter_model = True
+        if 'set_experimental_scatter_model' in self.config:
+            print("'set_experimental_scatter_model' set to {}".format(self.config['set_experimental_scatter_model']))
+            self.experimental_scatter_model = self.config['set_experimental_scatter_model']
+        else:
+            print("'set_experimental_scatter_model' not in config: setting to True")
+            self.experimental_scatter_model(True)
 
     def set_experimental_scatter_model(self, experimental_scatter_model):
         """
@@ -486,9 +494,9 @@ class OpticalPhoton:
 
             # intersection with cylinder
             if self.current_medium == XENON_GAS:
-                xint, path_length, nvec = intersection_with_cylinder(self.x, self.t, self.R, self.zliq, self.ztop)
+                xint, _, nvec = intersection_with_cylinder(self.x, self.t, self.R, self.zliq, self.ztop)
             else:
-                xint, path_length, nvec = intersection_with_cylinder(self.x, self.t, self.R, self.zbot, self.zliq)
+                xint, _, nvec = intersection_with_cylinder(self.x, self.t, self.R, self.zbot, self.zliq)
 
             #
             # Let the photon interact with a surface

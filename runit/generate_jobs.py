@@ -41,7 +41,7 @@ def write_script(run_id, job_id, base_config_file):
 
     # modify the filename
     data_dir = data_base_dir + run_id
-    config["filename"] = data_dir + "/{}.mc{:04}.hd5f".format(run_id, job_id)
+    config["filename"] = data_dir + "/{}.{:04}.hd5f".format(run_id, job_id)
     # Write the dictionary to the JSON file
     with open(config_file, "w") as json_file:
         json.dump(config, json_file, indent=4)  
@@ -69,7 +69,7 @@ def write_script(run_id, job_id, base_config_file):
         cmd = 'mkdir '+log_dir
         os.system(cmd)
 
-    # os.system('qsub -e '+log_dir+' -o '+log_dir+' '+scriptfile)
+    os.system('qsub -e '+log_dir+' -o '+log_dir+' '+scriptfile)
 
 #
 # main function
