@@ -1,8 +1,8 @@
 {
-    "nevents": 1000,
-    "nphoton_per_event": 100000,
+    "nevents": 10000,
+    "nphoton_per_event": 10000,
     "photon_zgen": 0.1,
-    "geometry": {
+    "geometry":{
         "type": "cylinder",
         "radius": 2.5,
         "ztop": 1.0,
@@ -10,11 +10,11 @@
         "zbot": -5.0
     },
     "npmt_xy": 2,
-    "pmt": {
+    "pmt":{
         "type": "square",
         "size": 2.54,
         "ndivs": 10
     },
     "set_no_scatter": false,
-    "set_experimental_scatter_model": true
+    "set_experimental_scatter_model": false
 }

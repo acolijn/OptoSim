@@ -194,7 +194,7 @@ class OpticalPhoton:
         """
         # Generate random values for the angles theta and phi
         phi = random.uniform(0.0, 2.0 * math.pi)
-        theta = theta = math.acos(2 * random.uniform(0.0, 1.0) - 1.0)
+        theta = math.acos(2 * random.uniform(0.0, 1.0) - 1.0)
 
         # Calculate the direction vector components
         tx = math.sin(theta) * math.cos(phi)
@@ -332,6 +332,20 @@ class OpticalPhoton:
 
         A.P. Colijn
         """    
+
+        if np.linalg.norm(dir) != 0.0:
+            dir = dir / np.linalg.norm(dir)
+        else:
+            print('error: direction vector has zero length')
+            return 1
+        
+        if np.linalg.norm(nvec) != 0.0:
+            nvec = nvec / np.linalg.norm(nvec)  
+        else:
+            print('error: normal vector has zero length')
+            return 1
+
+
         # 1. get the medium in which the photon is propagating
         medium1 = self.current_medium
         n1 = self.get_refractive_index(medium1)
@@ -347,7 +361,12 @@ class OpticalPhoton:
         ####    return 0
 
         # 3. calculate the angle of incidence
-        theta1 = math.acos(np.dot(-dir, nvec))
+        dot_product = np.dot(-dir, nvec)
+        clamped_value = min(max(dot_product, -1.0), 1.0)
+        if abs(dot_product) > 1.0:
+            print('error: dot_product > 1.0')
+            self.print()
+        theta1 = math.acos(clamped_value)
         # 4. calculate the average reflected power. I assume unpolarized light....
         
         R_diff = -1.0
@@ -495,10 +514,11 @@ class OpticalPhoton:
         while propagating:
 
             # intersection with cylinder
+            path_length = -100
             if self.current_medium == XENON_GAS:
-                xint, _, nvec = intersection_with_cylinder(self.x, self.t, self.R, self.zliq, self.ztop)
+                xint, path_length, nvec = intersection_with_cylinder(self.x, self.t, self.R, self.zliq, self.ztop)
             else:
-                xint, _, nvec = intersection_with_cylinder(self.x, self.t, self.R, self.zbot, self.zliq)
+                xint, path_length, nvec = intersection_with_cylinder(self.x, self.t, self.R, self.zbot, self.zliq)
 
             #
             # Let the photon interact with a surface
@@ -512,8 +532,12 @@ class OpticalPhoton:
             # 
             # The position and direction of the photon are updated after the interaction.
             #
-            if xint != None:
-                self.interact_with_surface(xint, self.t, nvec)
+            # print(xint, self.t, nvec, path_length)
+            if path_length>0.0:
+                istat = self.interact_with_surface(xint, self.t, nvec)
+                if istat == 1:
+                    print('error in interact_with_surface')
+                    self.alive = False 
             else:
                 # no intersection with cylinder
                 print('no intersection with cylinder')

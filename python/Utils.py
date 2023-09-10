@@ -27,7 +27,7 @@ def calculate_position(x, t, s):
     return (x[0] + s * t[0], x[1] + s * t[1], x[2] + s * t[2])
 
 @njit
-def intersection_with_cylinder(x, t, R, zb, zt):
+def intersection_with_cylinder_old(x, t, R, zb, zt):
     """Finds intersection of straight line photon trajectory with cylinder. Only intersections 
     in the direction of the photon are considered.
 
@@ -44,9 +44,10 @@ def intersection_with_cylinder(x, t, R, zb, zt):
     # Initialize a list of path lengths
     s = []
     surface = []
+    margin = 1e-6
 
-    # Calculate the intersection points with the bottom horizontal plane
-    if t[2] != 0.:  # Check if the photon is not parallel to the bottom plane
+    # Calculate the intersection points with the horizontal planes
+    if abs(t[2]) > margin:  # Check if the photon is not parallel to the bottom plane
         t_bottom_plane = (zb - x[2]) / t[2]
         if t_bottom_plane >= 0.:
             s.append(t_bottom_plane)
@@ -82,7 +83,6 @@ def intersection_with_cylinder(x, t, R, zb, zt):
     # Only find the intersection point furthest away from the start point. In this way we avoid selecting teh intersection point close to teh starting point
     # of the photon trajectory is found due to numerical imprecision. This is an isue if teh photon starts on the boundary of a volume.
     #
-    margin = 1e-6
     path_length = -100.
     intersection_point = None
 
@@ -94,7 +94,7 @@ def intersection_with_cylinder(x, t, R, zb, zt):
         point = calculate_position(x, t, s_i)
         # Check if the intersection point is within the cylinder
         # if (zb - margin <= point[2] <= zt +margin) and (point[2] - x[2]) / t[2] >= 0. and  (np.sqrt(point[0]**2 + point[1]**2) <= R + margin):
-        if (zb - margin <= point[2] <= zt +margin) and (np.sqrt(point[0]**2 + point[1]**2) <= R + margin) and s_i>0:
+        if (zb - margin <= point[2] <= zt +margin) and (np.sqrt(point[0]**2 + point[1]**2) <= R + margin):
 
             # Check if the intersection point is further away from the start point than the previous intersection point
             if s_i > path_length:
@@ -113,6 +113,74 @@ def intersection_with_cylinder(x, t, R, zb, zt):
         return None, None, None
 
     return intersection_point, path_length, normal_vec
+
+MARGIN = 1e-6
+
+@njit
+def intersection_with_cylinder(x, t, R, zb, zt):
+    """Finds intersection of straight line photon trajectory with cylinder. Only intersections 
+    in the direction of the photon are considered.
+
+    Args:
+        x (array): start point of photon
+        t (array): direction of photon
+        R (float): radius of cylinder
+        zb (float): z of bottom of cylinder
+        zt (float): z of top of cylinder
+
+    Returns:
+        array, float, array: intersection point, path length, normal vector
+    """ 
+    
+    def calculate_intersection_plane(axis_val, t_val, plane_val):
+        if abs(t_val) > MARGIN:
+            return (plane_val - axis_val) / t_val
+        return -1.0
+    
+    def calculate_position(start, direction, distance):
+        return start + direction * distance
+
+    # Check intersection with bottom and top planes
+    t_bottom_plane = calculate_intersection_plane(x[2], t[2], zb)
+    t_top_plane = calculate_intersection_plane(x[2], t[2], zt)
+    
+    # Calculate coefficients for the quadratic equation for the cylinder shell
+    A = t[0]**2 + t[1]**2
+    B = 2 * (x[0] * t[0] + x[1] * t[1])
+    C = x[0]**2 + x[1]**2 - R**2
+
+    # Calculate the discriminant
+    discriminant = B**2 - 4 * A * C
+    t1, t2 = -1.0, -1.0
+    if discriminant >= 0.:
+        t1 = (-B + np.sqrt(discriminant)) / (2 * A)
+        t2 = (-B - np.sqrt(discriminant)) / (2 * A)
+    
+    possible_ts = [t_val for t_val in [t_bottom_plane, t_top_plane, t1, t2] if t_val > 0.0]
+    
+    intersection_point = np.zeros(3)
+    max_path_length = -100.
+    normal_vec = np.zeros(3)
+    
+    for t_val in possible_ts:
+        point = calculate_position(x, t, t_val)
+        if (zb - MARGIN <= point[2] <= zt + MARGIN) and np.linalg.norm(point[:2]) <= R + MARGIN:
+            if t_val > max_path_length:
+                max_path_length = t_val
+                intersection_point = point
+                if t_val == t_bottom_plane:
+                    normal_vec = np.array([0., 0.,  1.])
+                elif t_val == t_top_plane:
+                    normal_vec = np.array([0., 0., -1.])
+                else:
+                    len_point = np.linalg.norm(point[:2])
+                    normal_vec = np.array([-point[0] / len_point, -point[1] / len_point, 0.])
+
+    #if intersection_point == None:
+    #    print("No intersection points found")
+    #    return np.zeros(3), max_path_length, np.zeros(3)    
+
+    return intersection_point, max_path_length, normal_vec
 
 
 @njit
