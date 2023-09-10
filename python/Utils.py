@@ -46,16 +46,17 @@ def intersection_with_cylinder(x, t, R, zb, zt):
     surface = []
 
     # Calculate the intersection points with the bottom horizontal plane
-    t_bottom_plane = (zb - x[2]) / t[2]
-    if t_bottom_plane >= 0.:
-        s.append(t_bottom_plane)
-        surface.append("bottom")
+    if t[2] != 0.:  # Check if the photon is not parallel to the bottom plane
+        t_bottom_plane = (zb - x[2]) / t[2]
+        if t_bottom_plane >= 0.:
+            s.append(t_bottom_plane)
+            surface.append("bottom")
 
-    # Calculate the intersection points with the top horizontal plane
-    t_top_plane = (zt - x[2]) / t[2]
-    if t_top_plane >= 0.:
-        s.append(t_top_plane)
-        surface.append("top")
+        # Calculate the intersection points with the top horizontal plane
+        t_top_plane = (zt - x[2]) / t[2]
+        if t_top_plane >= 0.:
+            s.append(t_top_plane)
+            surface.append("top")
 
     # Calculate coefficients for the quadratic equation for the cylinder shell
     A = t[0]**2 + t[1]**2

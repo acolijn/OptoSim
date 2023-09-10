@@ -366,17 +366,17 @@ class OpticalPhoton:
 
         if  rran < R_average:
             # reflected
-            # print("reflected")
+            #print("reflected")
             # 6. calculate the reflected direction
 
             if (rran < R_diff) and (medium2 == PTFE) and self.experimental_scatter_model:
                 # diffuse reflection
-                print('diffuse reflection')
+                #print('... diffuse reflection from PTFE. experimental model =', self.experimental_scatter_model)
                 reflected_dir = generate_lambertian(nvec)
 
             else:
                 # specular reflection
-                print('specular reflection')
+                #print('... specular reflection')
                 in_dir = self.t
                 dot_product = np.dot(-in_dir, nvec)
                 reflected_dir = in_dir + 2 * dot_product * nvec
@@ -387,7 +387,7 @@ class OpticalPhoton:
 
         else:
             # transmitted 
-            print("transmitted")
+            #print("transmitted")
             # 6. calculate the transmitted direction           
             in_dir = self.t
             dot_product = np.dot(-in_dir, nvec)

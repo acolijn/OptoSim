@@ -11,14 +11,15 @@ run_dir = '/user/z37/OptoSim/runit'
 # directory where the scripts live
 #
 script_dir = run_dir +'/scripts/'
-#
-# directory where the logfiles live
-#
-log_dir = run_dir +'/logs/'
+
 #
 # data directory base
 #
 data_base_dir = '/data/xenon/acolijn/optosim/data/'
+#
+# directory where the logfiles live
+#
+log_dir = data_base_dir +'/logs/'
 
 def write_config(run_id, job_id, base_config_file):
     """Write the configuration file for a job

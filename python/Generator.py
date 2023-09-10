@@ -155,7 +155,6 @@ class Generator:
         event_data['fine_bot'] = fine_signal_bot
 
         return event_data
-    
 
     def generate_random_position(self):
         """Generates a random position within the detector volume.
