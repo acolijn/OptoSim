@@ -90,8 +90,13 @@ def intersection_with_cylinder(x, t, R, zb, zt):
     normal_vec = np.zeros(3)
 
     for s_i in s:
+        # Calculate the intersection point
         point = calculate_position(x, t, s_i)
-        if (zb - margin <= point[2] <= zt +margin) and (point[2] - x[2]) / t[2] >= 0. and  (np.sqrt(point[0]**2 + point[1]**2) <= R + margin):
+        # Check if the intersection point is within the cylinder
+        # if (zb - margin <= point[2] <= zt +margin) and (point[2] - x[2]) / t[2] >= 0. and  (np.sqrt(point[0]**2 + point[1]**2) <= R + margin):
+        if (zb - margin <= point[2] <= zt +margin) and (np.sqrt(point[0]**2 + point[1]**2) <= R + margin) and s_i>0:
+
+            # Check if the intersection point is further away from the start point than the previous intersection point
             if s_i > path_length:
                 intersection_point = point 
                 path_length = s_i

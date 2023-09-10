@@ -512,7 +512,13 @@ class OpticalPhoton:
             # 
             # The position and direction of the photon are updated after the interaction.
             #
-            self.interact_with_surface(xint, self.t, nvec)
+            if xint != None:
+                self.interact_with_surface(xint, self.t, nvec)
+            else:
+                # no intersection with cylinder
+                print('no intersection with cylinder')
+                self.alive = False
+                return 0
             #self.print()
             #
             # Check if the photon should continue propagating, be terminated, or be detected

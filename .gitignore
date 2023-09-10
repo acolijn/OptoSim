@@ -11,3 +11,4 @@ python/__pycache__/
 notebook/.ipynb_checkpoints/GeneratorVerification-checkpoint.ipynb
 notebook/.ipynb_checkpoints/GeneratorVerification-checkpoint.ipynb
 notebook/.ipynb_checkpoints/PropagationVerification-checkpoint.ipynb
+runit/logs
