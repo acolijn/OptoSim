@@ -56,9 +56,17 @@ class OpticalPhoton:
 
         # exent of the ptfe cylinder. If a photon intersects with the cylinder outside 
         # this range, it is terminated.
-        self.ptfe_zmin = self.config['geometry']['ptfe_zmin']
-        self.ptfe_zmax = self.config['geometry']['ptfe_zmax']
+        if 'ptfe_zmin' not in self.config['geometry']:
+            print("'ptfe_zmin' not in config: setting to zbot")
+            self.ptfe_zmin = self.zbot
+        else:
+            self.ptfe_zmin = self.config['geometry']['ptfe_zmin']
 
+        if 'ptfe_zmax' not in self.config['geometry']:
+            print("'ptfe_zmax' not in config: setting to ztop")
+            self.ptfe_zmax = self.ztop
+        else:
+            self.ptfe_zmax = self.config['geometry']['ptfe_zmax']
 
         # initial and current position
         self.x0 = np.zeros(3)
@@ -583,7 +591,7 @@ class OpticalPhoton:
             self.alive = False
             self.detected = True
             return False
-        elif self.current_medium == PTFE:
+        elif (self.current_medium == PTFE) or (self.current_medium == VOID):
             # photon is terminated
             self.alive = False
             return False
