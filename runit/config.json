@@ -1,4 +1,5 @@
 {
+    "detector": "XAMS",
     "nevents": 10000,
     "nphoton_per_event": 10000,
     "photon_zgen": 0.1,

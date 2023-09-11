@@ -1,7 +1,11 @@
+import os
 import h5py
 import json
 import matplotlib.pyplot as plt
 import numpy as np
+import pandas as pd
+from IPython.display import display, HTML
+
 
 class EventReader:
     """A class for reading optical simulation data from a list of files"""
@@ -111,13 +115,68 @@ class EventReader:
         im = axs[0].imshow(fine.T, cmap='viridis', interpolation='nearest', origin='lower', extent=[-r,r,-r,r])
         plt.colorbar(im, ax=axs[0])
         axs[0].plot(truth[0], truth[1], marker='o', markersize=10, color='red', label='Marker')
+        axs[0].set_xlabel('x (cm)')
+        axs[0].set_ylabel('y (cm)')
 
         pmt = np.array(event['pmt_top'])
         im = axs[1].imshow(pmt.T, cmap='viridis', interpolation='nearest', origin='lower', extent=[-r,r,-r,r])
         plt.colorbar(im, ax=axs[1])
         axs[1].plot(truth[0], truth[1], marker='o', markersize=10, color='red', label='Marker')
+        axs[1].set_xlabel('x (cm)')
+        axs[1].set_ylabel('y (cm)')
 
         plt.show()
 
+def show_data(data_dir):
+    """Shows the data
 
+    Parameters
+    ----------
+    data_dir : str
+        The directory containing the data
+
+    Returns
+    -------
+    None
+
+    A.P. Colijn
+    """
+    subdirs = [d for d in os.listdir(data_dir) if os.path.isdir(os.path.join(data_dir, d))]
+
+    attributes_list = []
+
+    for subdir in subdirs:
+        subdir_path = os.path.join(data_dir, subdir)
+        hd5_files = sorted([f for f in os.listdir(subdir_path) if f.endswith('.hd5f')])
+        
+        if hd5_files:
+            first_hd5_file = os.path.join(subdir_path, hd5_files[0])
+            try:
+                with h5py.File(first_hd5_file, 'r') as file:
+                    attrs = dict(file.attrs)
+                    
+                    config_str = attrs.get('config', None)
+                    if config_str is not None:
+                        config_dict = json.loads(config_str)
+                        config_dict['subdir'] = subdir
+                        if 'geometry' in config_dict:
+                            config_dict.update(config_dict['geometry'])
+                        if 'pmt' in config_dict:
+                            config_dict.update(config_dict['pmt'])
+
+                        attributes_list.append(config_dict)
+            except OSError:
+                print(f"File {first_hd5_file} is currently open by another process. Skipping...")
+            except Exception as e:
+                print(f"Error reading file {first_hd5_file}: {e}")
+
+
+
+    df = pd.DataFrame(attributes_list)
+    #display(HTML(df.to_html(index=False)))
+    cols = ['subdir','detector','nevents','nphoton_per_event','set_no_scatter','set_experimental_scatter_model', 'radius']
+    # Filter the list to include only columns that exist in the DataFrame
+    cols = [col for col in cols if col in df.columns]
+
+    return df[cols]
 

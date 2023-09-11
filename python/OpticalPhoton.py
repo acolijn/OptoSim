@@ -17,7 +17,7 @@ PMT = 3
 VOID = 4
 
 medium_names = ['GXe', 'LXe', 'PTFE', 'PMT', "VOID"]
-refractive_index = np.array([1., 1.5, 1.69, 3.5, 1.0])
+refractive_index = np.array([1., 1.64, 1.69, 3.5, 1.0])
 
 class OpticalPhoton:
     """

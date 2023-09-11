@@ -7,7 +7,9 @@
         "radius": 2.5,
         "ztop": 1.0,
         "zliq": 0.0,
-        "zbot": -5.0
+        "zbot": -4.0,
+        "ptfe_zmin": -99999.0,
+        "ptfe_zmax": 99999.0
     },
     "npmt_xy": 2,
     "pmt": {
