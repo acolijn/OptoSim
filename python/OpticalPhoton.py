@@ -14,9 +14,10 @@ XENON_GAS = 0
 XENON_LIQ = 1
 PTFE = 2
 PMT = 3
+VOID = 4
 
-medium_names = ['GXe', 'LXe', 'PTFE', 'PMT']
-refractive_index = np.array([1., 1.5, 1.69, 3.5])
+medium_names = ['GXe', 'LXe', 'PTFE', 'PMT', "VOID"]
+refractive_index = np.array([1., 1.5, 1.69, 3.5, 1.0])
 
 class OpticalPhoton:
     """
@@ -52,6 +53,12 @@ class OpticalPhoton:
         self.ztop = self.config['geometry']['ztop']
         self.zliq = self.config['geometry']['zliq']
         self.zbot = self.config['geometry']['zbot']
+
+        # exent of the ptfe cylinder. If a photon intersects with the cylinder outside 
+        # this range, it is terminated.
+        self.ptfe_zmin = self.config['geometry']['ptfe_zmin']
+        self.ptfe_zmax = self.config['geometry']['ptfe_zmax']
+
 
         # initial and current position
         self.x0 = np.zeros(3)
@@ -148,10 +155,14 @@ class OpticalPhoton:
         margin = 1e-6
 
         r = np.sqrt(x[0]**2 + x[1]**2)
+        z = x[2]
+
         if r >= self.R:
-            medium = PTFE
+            if self.ptfe_zmin < z < self.ptfe_zmax:
+                medium = PTFE
+            else:
+                medium = VOID
         else:
-            z = x[2]
             if ((z > self.zliq) and (z <= self.ztop - margin)):
                 medium = XENON_GAS
             elif ((z < self.zliq) and (z >= self.zbot + margin)):
@@ -370,7 +381,7 @@ class OpticalPhoton:
         # 4. calculate the average reflected power. I assume unpolarized light....
         
         R_diff = -1.0
-        if (medium2 == PTFE) and self.experimental_scatter_model: # PTFE reflection based on experimental data
+        if (medium2 == PTFE) and self.experimental_scatter_model: # PTFE reflection based on experimental data 
             R_average, R_diff, _, _ = scatter_on_ptfe(theta1, medium_names[medium1])
         else:  # standard Fresnel reflection/transmission
             R_average, _ = self.fresnel_coefficients_average(n1, n2, theta1)
@@ -378,7 +389,7 @@ class OpticalPhoton:
         # 5. decide whether the photon is reflected or transmitted based on the reflected power
 
         ##print('x before scatter =', xint,'direction before scatter', self.t, 'medium before scatter', medium1, 'medium after scatter', medium2, 'r_average', R_average)
-        if self.no_scattering:
+        if self.no_scattering or (medium2 == VOID):
             rran = 1.0 # force transmission
         else:
             rran = random.uniform(0, 1)

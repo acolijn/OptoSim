@@ -156,29 +156,35 @@ def intersection_with_cylinder(x, t, R, zb, zt):
         t1 = (-B + np.sqrt(discriminant)) / (2 * A)
         t2 = (-B - np.sqrt(discriminant)) / (2 * A)
     
+    # Find the intersection point with the cylinder shell and a positve path length
     possible_ts = [t_val for t_val in [t_bottom_plane, t_top_plane, t1, t2] if t_val > 0.0]
     
+    # Initialize the intersection point, path length and normal vector
     intersection_point = np.zeros(3)
     max_path_length = -100.
     normal_vec = np.zeros(3)
     
+    # Find the intersection point with the largest path length
     for t_val in possible_ts:
+        # Calculate the intersection point
         point = calculate_position(x, t, t_val)
+        # Check if the intersection point is within the cylinder
         if (zb - MARGIN <= point[2] <= zt + MARGIN) and np.linalg.norm(point[:2]) <= R + MARGIN:
+            # Check if the intersection point is further away from the start point than the previous intersection point
             if t_val > max_path_length:
                 max_path_length = t_val
                 intersection_point = point
+                # detrmine whch surface the intersection point is on
                 if t_val == t_bottom_plane:
+                    # bottom plane. normal vector points up
                     normal_vec = np.array([0., 0.,  1.])
                 elif t_val == t_top_plane:
+                    # top plane. normal vector points down
                     normal_vec = np.array([0., 0., -1.])
                 else:
+                    # cylinder shell. normal vector points radially inward
                     len_point = np.linalg.norm(point[:2])
                     normal_vec = np.array([-point[0] / len_point, -point[1] / len_point, 0.])
-
-    #if intersection_point == None:
-    #    print("No intersection points found")
-    #    return np.zeros(3), max_path_length, np.zeros(3)    
 
     return intersection_point, max_path_length, normal_vec
 

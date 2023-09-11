@@ -1,5 +1,7 @@
 import h5py
 import json
+import matplotlib.pyplot as plt
+import numpy as np
 
 class EventReader:
     """A class for reading optical simulation data from a list of files"""
@@ -69,3 +71,53 @@ class EventReader:
         # Reset indices and counters
         self.file_index = 0
         self.event_index = -1
+
+    def print_event(self, event):
+        """Prints the event
+        
+        Parameters
+        ----------
+        event : dict
+            The event to print
+
+        Returns
+        -------
+        None
+
+        A.P. Colijn
+        """
+        print(event)
+
+    def show_event(self, event):
+        """Shows the event
+        
+        Parameters
+        ----------
+        event : dict
+            The event to show
+
+        Returns
+        -------
+        None
+
+        A.P. Colijn
+        """
+        truth = np.array(event['true_position'])
+        
+        r = self.config['geometry']['radius']
+
+        fig, axs = plt.subplots(1, 2, figsize=(10, 4))
+        fine = np.array(event['fine_top'])
+        im = axs[0].imshow(fine.T, cmap='viridis', interpolation='nearest', origin='lower', extent=[-r,r,-r,r])
+        plt.colorbar(im, ax=axs[0])
+        axs[0].plot(truth[0], truth[1], marker='o', markersize=10, color='red', label='Marker')
+
+        pmt = np.array(event['pmt_top'])
+        im = axs[1].imshow(pmt.T, cmap='viridis', interpolation='nearest', origin='lower', extent=[-r,r,-r,r])
+        plt.colorbar(im, ax=axs[1])
+        axs[1].plot(truth[0], truth[1], marker='o', markersize=10, color='red', label='Marker')
+
+        plt.show()
+
+
+

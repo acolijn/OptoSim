@@ -1,5 +1,5 @@
 import numpy as np
-from Utils import generate_lambertian, rotation_matrix_from_z_to_n
+from scipy.interpolate import CubicSpline
 #
 # scattering data for interface between LXe and PTFE
 #
