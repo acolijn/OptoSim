@@ -53,6 +53,11 @@ class Generator:
     def __init__(self, **kwargs):
         """Initializes the generator class. The configuration is read from the config file.
 
+        Parameters
+        ----------
+        config : str
+            Filename of configuration file. Default is 'config.json'.
+
         """
         # Read configuration file
         self.config_file = kwargs.get('config', 'config.json')
@@ -90,6 +95,12 @@ class Generator:
                     photons deteccted in the 'real' detector bottom.
             }
 
+        Returns
+        -------
+        event_data : dict
+            Dictionary containing the event data.
+
+        A.P. Colijn 2023
         """
         # Generate random position
         x0 = self.generate_random_position()
@@ -122,30 +133,31 @@ class Generator:
             if self.aPhoton.is_detected():
                 # get photon position
                 x = self.aPhoton.get_photon_position()
-                # get bin in x and y
-                ix = int((x[0] + offset) / dx)
-                iy = int((x[1] + offset) / dy)
-                # if in range
-                if (0 <= ix < npmt) and (0 <=iy < npmt):
-                    if x[2] > 0:
-                        # add photon to pmt bin in top array
-                        pmt_signal_top[ix, iy] += 1
-                    else:
-                        # add photon to pmt bin in bottom array
-                        pmt_signal_bot[ix, iy] += 1
+                # get bin in x and y. make sure bin0 does not get overpopulated..... 
+                if (x[0] + offset >= 0) and (x[1] + offset >= 0):
+                    ix = int((x[0] + offset) / dx)
+                    iy = int((x[1] + offset) / dy)
+                    # if in range
+                    if (0 <= ix < npmt) and (0 <=iy < npmt):
+                        if x[2] > 0:
+                            # add photon to pmt bin in top array
+                            pmt_signal_top[ix, iy] += 1
+                        else:
+                            # add photon to pmt bin in bottom array
+                            pmt_signal_bot[ix, iy] += 1
 
-                # get bin in x and y
-                ix_fine = int((x[0] + offset) / dx_fine)
-                iy_fine = int((x[1] + offset) / dy_fine)
-                # if in range
-                #if ix_fine < npmt*ndivs and iy_fine < npmt*ndivs:
-                if (0 <= ix_fine < npmt*ndivs) and (0 <= iy_fine < npmt*ndivs):
-                    if x[2] > 0:
-                        # add photon to fine bin in top array
-                        fine_signal_top[ix_fine, iy_fine] += 1
-                    else:
-                        # add photon to fine bin in bottom array
-                        fine_signal_bot[ix_fine, iy_fine] += 1
+                    # get bin in x and y
+                    ix_fine = int((x[0] + offset) / dx_fine)
+                    iy_fine = int((x[1] + offset) / dy_fine)
+                    # if in range
+                    #if ix_fine < npmt*ndivs and iy_fine < npmt*ndivs:
+                    if (0 <= ix_fine < npmt*ndivs) and (0 <= iy_fine < npmt*ndivs):
+                        if x[2] > 0:
+                            # add photon to fine bin in top array
+                            fine_signal_top[ix_fine, iy_fine] += 1
+                        else:
+                            # add photon to fine bin in bottom array
+                            fine_signal_bot[ix_fine, iy_fine] += 1
 
         event_data = {}
         event_data['number'] = self.ievent
