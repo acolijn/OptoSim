@@ -1,14 +1,14 @@
 {
-    "detector": "XENON",
+    "detector": "XAMS",
     "nevents": 1000,
-    "nphoton_per_event": 1000000,
+    "nphoton_per_event": 100000,
     "photon_zgen": 0.1,
     "geometry": {
         "type": "cylinder",
-        "radius": 65.0,
-        "ztop": 10.0,
+        "radius": 2.5,
+        "ztop": 1.0,
         "zliq": 0.0,
-        "zbot": -150.0,
+        "zbot": -4.0,
         "ptfe_zmin": -99999.0,
         "ptfe_zmax": 99999.0
     },
@@ -19,5 +19,5 @@
         "ndivs": 10
     },
     "set_no_scatter": false,
-    "set_experimental_scatter_model": false
+    "set_experimental_scatter_model": true
 }

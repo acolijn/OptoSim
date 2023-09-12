@@ -9,8 +9,8 @@
         "ztop": 1.2,
         "zliq": 0.0,
         "zbot": -6.7,
-        "ptfe_zmin": -5.32,
-        "ptfe_zmax": -0.25
+        "ptfe_zmin": -9999.0,
+        "ptfe_zmax": 9999.0
     },
     "npmt_xy": 2,
     "pmt":{

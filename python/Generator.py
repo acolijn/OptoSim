@@ -126,7 +126,7 @@ class Generator:
                 ix = int((x[0] + offset) / dx)
                 iy = int((x[1] + offset) / dy)
                 # if in range
-                if ix < npmt and iy < npmt:
+                if (0 <= ix < npmt) and (0 <=iy < npmt):
                     if x[2] > 0:
                         # add photon to pmt bin in top array
                         pmt_signal_top[ix, iy] += 1
@@ -138,7 +138,8 @@ class Generator:
                 ix_fine = int((x[0] + offset) / dx_fine)
                 iy_fine = int((x[1] + offset) / dy_fine)
                 # if in range
-                if ix_fine < npmt*ndivs and iy_fine < npmt*ndivs:
+                #if ix_fine < npmt*ndivs and iy_fine < npmt*ndivs:
+                if (0 <= ix_fine < npmt*ndivs) and (0 <= iy_fine < npmt*ndivs):
                     if x[2] > 0:
                         # add photon to fine bin in top array
                         fine_signal_top[ix_fine, iy_fine] += 1
@@ -197,6 +198,7 @@ class Generator:
          
         # Open file
         self.file = h5py.File(filename, 'w') 
+        # Write configuration to file
         self.file.attrs['config'] = json.dumps(self.config)
 
         # Create group for configuration
@@ -206,6 +208,8 @@ class Generator:
     
     def write_event(self, event):
         """Writes an even+t to the file.
+
+        
         """
 
         # Create group for event

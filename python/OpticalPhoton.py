@@ -79,6 +79,7 @@ class OpticalPhoton:
         self.alive = True
         self.detected = False
 
+        # set the photon position
         if 'set_no_scatter' in self.config:
             print("'set_no_scatter' set to {}".format(self.config['set_no_scatter']))
             self.no_scattering = self.config['set_no_scatter']

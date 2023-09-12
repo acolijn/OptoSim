@@ -1,23 +1,24 @@
 {
-    "detector": "XAMS",
-    "nevents": 10000,
+    "detector": "XENON",
+    "nevents": 100,
     "nphoton_per_event": 10000,
     "photon_zgen": 0.1,
     "geometry": {
         "type": "cylinder",
-        "radius": 3.2,
-        "ztop": 1.2,
+        "radius": 65.0,
+        "ztop": 5.0,
         "zliq": 0.0,
-        "zbot": -6.7,
+        "zbot": -150.0,
         "ptfe_zmin": -9999.0,
         "ptfe_zmax": 9999.0
     },
-    "npmt_xy": 2,
+    "npmt_xy": 40,
     "pmt":{
         "type": "square",
         "size": 2.54,
         "ndivs": 10
     },
     "set_no_scatter": false,
-    "set_experimental_scatter_model": true
+    "set_experimental_scatter_model": true,
+    "filename": "/data/xenon/acolijn/optosim/data/mc9999/mc9999.0000.hd5f"
 }
