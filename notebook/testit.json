@@ -6,7 +6,7 @@
     "geometry": {
         "type": "cylinder",
         "radius": 2.5,
-        "ztop": 1.0,
+        "ztop": 4.0,
         "zliq": 0.0,
         "zbot": -4.0,
         "ptfe_zmin": -99999.0,

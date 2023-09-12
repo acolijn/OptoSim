@@ -172,7 +172,7 @@ class OpticalPhoton:
             else:
                 medium = VOID
         else:
-            if ((z > self.zliq) and (z <= self.ztop - margin)):
+            if ((z >= self.zliq) and (z <= self.ztop - margin)):
                 medium = XENON_GAS
             elif ((z < self.zliq) and (z >= self.zbot + margin)):
                 medium = XENON_LIQ
@@ -374,6 +374,8 @@ class OpticalPhoton:
         #   This is a bit of a hack, but it works.
         medium2 = self.get_medium(calculate_position(xint, nvec, -1e-4))         
         n2 = self.get_refractive_index(medium2)
+
+        #print('medium1', medium1, 'medium2', medium2, 'n1', n1, 'n2', n2)
 
         ####if medium2 == PTFE: # test to see the effect of PTFE relfection on the photon propagation
         ####    # photon is terminated
