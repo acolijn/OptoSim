@@ -103,7 +103,7 @@ class Generator:
 
         ndivs = self.config['pmt']['ndivs']
         dx_fine = dx/ndivs
-        dy_fine = dy/ndivs
+        dy_fine = dy/ndivs 
         # Initialize pmt signal
         pmt_signal_top = np.zeros((npmt, npmt), dtype=np.int32)
         pmt_signal_bot = np.zeros((npmt, npmt), dtype=np.int32)
