@@ -14,3 +14,5 @@ notebook/.ipynb_checkpoints/PropagationVerification-checkpoint.ipynb
 runit/logs
 runit/data
 python/__pycache__/OpticalPhoton.cpython-311.pyc
+notebook/photon_path.gif
+notebook/photon_path.mp4

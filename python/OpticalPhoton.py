@@ -10,6 +10,8 @@ from sys import exit
 
 # import ptfe_utils
 
+# random.seed(0)
+
 XENON_GAS = 0
 XENON_LIQ = 1
 PTFE = 2
@@ -93,6 +95,20 @@ class OpticalPhoton:
         else:
             print("'set_experimental_scatter_model' not in config: setting to True")
             self.experimental_scatter_model = True
+
+    def set_random_seed(self, seed):
+        """
+        Set the random seed
+
+        Parameters
+        ----------
+        seed(int) : int
+            The random seed
+
+        A.P. Colijn
+        """
+        random.seed(seed)
+
 
     def set_experimental_scatter_model(self, experimental_scatter_model):
         """
@@ -374,13 +390,6 @@ class OpticalPhoton:
         #   This is a bit of a hack, but it works.
         medium2 = self.get_medium(calculate_position(xint, nvec, -1e-4))         
         n2 = self.get_refractive_index(medium2)
-
-        #print('medium1', medium1, 'medium2', medium2, 'n1', n1, 'n2', n2)
-
-        ####if medium2 == PTFE: # test to see the effect of PTFE relfection on the photon propagation
-        ####    # photon is terminated
-        ####    self.alive = False
-        ####    return 0
 
         # 3. calculate the angle of incidence
         dot_product = np.dot(-dir, nvec)
