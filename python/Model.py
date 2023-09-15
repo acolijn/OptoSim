@@ -25,6 +25,18 @@ class SuperResolutionModel:
         self.low_to_high_res_net = MLPRegressor(**low_to_high_res_net_params)
         self.high_res_to_true_net = MLPRegressor(**high_res_to_true_net_params)
 
+    def create_datasets(self, X_low_res, X_high_res, y_true_pos, train_fraction=0.8):
+        n_train = int(train_ratio*len(X))
+
+        X_train = np.asarray(X_low_res[:n_train])
+        y_train = np.asarray(X_high_res[:n_train])
+        pos_train = np.asarray(y_true_pos[:n_train])
+
+        X_test = np.asarray(X_low_res[n_train:])
+        y_test = np.asarray(X_high_res[n_train:])
+        pos_test = np.asarray(y_true_pos[n_train:])
+        return X_train, y_train, pos_train, X_test, y_test, pos_test
+
     def train(self, X_low_res, X_high_res, y_true_pos):
         """
         Train the two networks.
@@ -37,11 +49,16 @@ class SuperResolutionModel:
         Returns:
             None
         """
+        # Reshape the data
+        X_low_res_flat = X_low_res.reshape(X_low_res.shape[0], -1)
+        X_high_res_flat = X_high_res.reshape(X_high_res.shape[0], -1)
+        y_true_pos_flat = y_true_pos.reshape(y_true_pos.shape[0], -1)
+
         # Train the low to high-resolution network
-        self.low_to_high_res_net.fit(X_low_res, X_high_res)
+        self.low_to_high_res_net.fit(X_low_res_flat, X_high_res_flat)
 
         # Train the high-resolution to true position network
-        self.high_res_to_true_net.fit(X_high_res, y_true_pos)
+        self.high_res_to_true_net.fit(X_high_res_flat, y_true_pos_flat)
 
     def predict(self, X_low_res):
         """
@@ -53,8 +70,11 @@ class SuperResolutionModel:
         Returns:
             array-like: Predicted true positions.
         """
+        # Reshape the data
+        X_low_res_flat = X_low_res.reshape(X_low_res.shape[0], -1)
+
         # Upscale from low resolution to high resolution
-        X_high_res_pred = self.low_to_high_res_net.predict(X_low_res)
+        X_high_res_pred = self.low_to_high_res_net.predict(X_low_res_flat)
 
         # Predict true position from high resolution
         y_true_pos_pred = self.high_res_to_true_net.predict(X_high_res_pred)
@@ -73,10 +93,15 @@ class SuperResolutionModel:
         Returns:
             dict: Evaluation metrics (e.g., MSE, R^2).
         """
-        y_pred = self.predict(X_low_res)
+        # Reshape the data
+        X_low_res_flat = X_low_res.reshape(X_low_res.shape[0], -1)
+        X_high_res_flat = X_high_res.reshape(X_high_res.shape[0], -1)
+        y_true_pos_flat = y_true_pos.reshape(y_true_pos.shape[0], -1)
 
-        mse = np.mean((y_true_pos - y_pred) ** 2)
-        r_squared = 1 - (np.sum((y_true_pos - y_pred) ** 2) / np.sum((y_true_pos - np.mean(y_true_pos)) ** 2))
+        y_pred = self.predict(X_low_res_flat)
+
+        mse = np.mean((y_true_pos_flat - y_pred) ** 2)
+        r_squared = 1 - (np.sum((y_true_pos_flat - y_pred) ** 2) / np.sum((y_true_pos_flat - np.mean(y_true_pos_flat)) ** 2))
 
         return {'MSE': mse, 'R^2': r_squared}
 
@@ -98,7 +123,7 @@ class SuperResolutionModel:
 
     import matplotlib.pyplot as plt
 
-    def visualize_heatmaps_with_positions(self, X_low_res, y_true_pos):
+    def visualize_heatmaps_with_positions(self, X_low_res, X_high_res, y_true_pos):
         """
         Visualize input and output heatmaps along with true and predicted positions.
 
@@ -109,8 +134,14 @@ class SuperResolutionModel:
         Returns:
             None
         """
+        original_shape = X_high_res.shape
+        # Reshape the data
+        X_low_res_flat = X_low_res.reshape(X_low_res.shape[0], -1)
+        X_high_res_flat = X_high_res.reshape(X_high_res.shape[0], -1)
+        y_true_pos_flat = y_true_pos.reshape(y_true_pos.shape[0], -1)
+        
         # Predict high-resolution heatmaps
-        X_high_res_pred = self.low_to_high_res_net.predict(X_low_res)
+        X_high_res_pred = self.low_to_high_res_net.predict(X_low_res_flat)
 
         # Predict true positions
         y_pred_pos = self.high_res_to_true_net.predict(X_high_res_pred)
@@ -122,14 +153,14 @@ class SuperResolutionModel:
 
             # Plot input low-resolution heatmap
             plt.subplot(1, 3, 1)
-            plt.imshow(X_low_res[i].reshape(2,2), cmap='hot', interpolation='nearest', origin='lower', extent=[-2.5, 2.5, -2.5, 2.5])
+            plt.imshow(X_low_res[i], cmap='hot', interpolation='nearest', origin='lower', extent=[-2.5, 2.5, -2.5, 2.5])
             plt.scatter(y_true_pos[i, 0], y_true_pos[i, 1], c='r', label='True Position')
             plt.scatter(y_pred_pos[i, 0], y_pred_pos[i, 1], c='b', label='Predicted Position')
             plt.title('Input Low-Res Heatmap')
 
             # Plot predicted high-resolution heatmap
             plt.subplot(1, 3, 2)
-            plt.imshow(X_high_res_pred[i].reshape(5,5), cmap='hot', interpolation='nearest', origin='lower', extent=[-2.5, 2.5, -2.5, 2.5])
+            plt.imshow(X_high_res_pred[i].reshape(original_shape[1:3]), cmap='hot', interpolation='nearest', origin='lower', extent=[-2.5, 2.5, -2.5, 2.5])
             plt.scatter(y_true_pos[i, 0], y_true_pos[i, 1], c='r', label='True Position')
             plt.scatter(y_pred_pos[i, 0], y_pred_pos[i, 1], c='b', label='Predicted Position')
             plt.title('Predicted High-Res Heatmap')
@@ -155,8 +186,12 @@ class SuperResolutionModel:
         Returns:
             None
         """
+        original_shape = X_low_res.shape
+        # Reshape the data
+        X_low_res_flat = X_low_res.reshape(X_low_res.shape[0], -1)
+
         # Predict high-resolution heatmaps
-        X_high_res_pred = self.low_to_high_res_net.predict(X_low_res)
+        X_high_res_pred = self.low_to_high_res_net.predict(X_low_res_flat)
 
         # Predict true positions
         y_pred_pos = self.high_res_to_true_net.predict(X_high_res_pred)
@@ -187,3 +222,15 @@ class SuperResolutionModel:
         plt.legend()
 
         plt.show()
+
+def create_datasets(X_low_res, X_high_res, y_true_pos, train_fraction=0.8):
+    n_train = int(train_fraction*len(X_low_res))
+
+    X_train = np.asarray(X_low_res[:n_train])
+    y_train = np.asarray(X_high_res[:n_train])
+    pos_train = np.asarray(y_true_pos[:n_train])
+
+    X_test = np.asarray(X_low_res[n_train:])
+    y_test = np.asarray(X_high_res[n_train:])
+    pos_test = np.asarray(y_true_pos[n_train:])
+    return X_train, y_train, pos_train, X_test, y_test, pos_test
