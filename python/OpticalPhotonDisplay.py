@@ -8,6 +8,7 @@ from mpl_toolkits.mplot3d import Axes3D
 from matplotlib.animation import FuncAnimation
 import os
 
+scatter_types = ['specular', 'diffuse', 'lambertian', 'mirror', 'dielectric', 'dielectric_metal']
 
 class OpticalPhotonDisplay(OpticalPhoton):
     """
@@ -72,7 +73,7 @@ class OpticalPhotonDisplay(OpticalPhoton):
         A.P. Colijn
         """
         self.path = []  # List to store the photon's path
-        propagating = True
+        propagating = True  
         # add initial position to path
         self.path.append(self.x.copy())  # Add the photon's position to the path list
 
@@ -311,3 +312,5 @@ class OpticalPhotonDisplay(OpticalPhoton):
         factor = 1.1 if event.button == 'up' else 0.9
         ax.dist /= factor
         event.canvas.draw()
+
+

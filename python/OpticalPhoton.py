@@ -72,10 +72,8 @@ class OpticalPhoton:
 
         # initial and current position
         self.x0 = np.zeros(3)
-        self.xc = np.zeros(3)
         # initial and current direction
         self.t0 = np.zeros(3)
-        self.tc = np.zeros(3)
 
         self.current_medium = XENON_GAS
         self.alive = True
@@ -246,7 +244,7 @@ class OpticalPhoton:
             print("Error: photon position is outside the detector")
             exit(0)
 
-        self.x0 = np.array(x0)
+        self.x0 = np.array(x0)      
         self.set_photon_position(self.x0)
         # the photon is alive...
         self.alive = True
@@ -272,14 +270,20 @@ class OpticalPhoton:
 
         A.P. Colijn
         """
+
+        # check if the position is inside the cylinder
         r = np.sqrt(x[0]**2 + x[1]**2)
         if r > self.R:
+            # outside the cylinder
             return False
         else:
+            # inside the cylinder
             z = x[2]
             if (z > self.zbot) and (z < self.ztop):
+                # inside the cylinder and between the top and bottom
                 return True
             else:
+                # inside the cylinder, but not between the top and bottom
                 return False
 
     def get_photon_direction(self):
