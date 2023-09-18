@@ -110,13 +110,22 @@ class SuperResolutionModel:
         Plot the training loss curve.
         """
         if hasattr(self.low_to_high_res_net, 'loss_curve_'):
-            plt.figure(figsize=(10, 5))
+            plt.figure(figsize=(10, 7))
+            plt.subplot(2, 1, 1)
             plt.plot(self.low_to_high_res_net.loss_curve_, label='Low to High Res Loss', color='blue')
             plt.plot(self.high_res_to_true_net.loss_curve_, label='High Res to True Loss', color='orange')
             plt.xlabel('Epochs')
             plt.ylabel('Loss')
             plt.legend()
             plt.title('Training Loss Curves')
+            plt.subplot(2, 1, 2)
+            plt.plot(self.low_to_high_res_net.loss_curve_, label='Low to High Res Loss', color='blue')
+            plt.plot(self.high_res_to_true_net.loss_curve_, label='High Res to True Loss', color='orange')
+            plt.ylim(0, 10)
+            plt.xlabel('Epochs')
+            plt.ylabel('Loss')
+            plt.legend()
+            plt.title('Zoom Training Loss Curves')
             plt.show()
         else:
             print("Loss curves not available. Ensure you have trained the models.")
@@ -166,12 +175,12 @@ class SuperResolutionModel:
             plt.title('Predicted High-Res Heatmap')
 
             # Plot true and predicted positions
-            #plt.subplot(1, 3, 3)
-            #plt.imshow(X_high_res_pred[i].reshape(20,20), cmap='hot', interpolation='nearest')
-            #plt.scatter(y_true_pos[i, 0], y_true_pos[i, 1], c='r', label='True Position')
-            #plt.scatter(y_pred_pos[i, 0], y_pred_pos[i, 1], c='b', label='Predicted Position')
+            plt.subplot(1, 3, 3)
+            plt.imshow(X_high_res[i], cmap='hot', interpolation='nearest', origin='lower', extent=[-2.5, 2.5, -2.5, 2.5])
+            plt.scatter(y_true_pos[i, 0], y_true_pos[i, 1], c='r', label='True Position')
+            plt.scatter(y_pred_pos[i, 0], y_pred_pos[i, 1], c='b', label='Predicted Position')
             plt.legend()
-            plt.title('True vs. Predicted Position')
+            plt.title('True Heatmap')
 
             plt.show()
 
