@@ -102,10 +102,10 @@ class SuperResolutionModel:
 
         _, y_pred = self.predict(X_low_res_flat)
 
-        mse = mse(y_true_pos_flat, y_pred)
-        r_squared = r_squared(y_true_pos_flat, y_pred)
+        mse_val = mse(y_true_pos_flat, y_pred)
+        r_squared_val = r_squared(y_true_pos_flat, y_pred)
 
-        return {'MSE': mse, 'R^2': r_squared}
+        return {'MSE': mse_val, 'R^2': r_squared_val}
 
     def plot_loss_curve(self):
         """
