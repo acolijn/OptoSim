@@ -37,6 +37,7 @@ class Generator:
         2. The per event data is stored in a dictionary with the following structure:
             {           
                 'number': event number,
+                'nphoton': number of photons generated in event,
                 'true_position': true position of event,
                 'fine_top': [npmt_xy*ndivs x npmt_xy*ndivs] for each event. This is the number
                     of photons detected in the 'fine' detector top.
@@ -124,7 +125,16 @@ class Generator:
         fine_signal_bot = np.zeros((nfine, nfine), dtype=np.int32)
 
         # Generate photons
-        for _ in range(self.config['nphoton_per_event']):
+        nph_range = self.config['nphoton_per_event']
+        nphoton = 0
+        if len(nph_range) == 1:
+            nphoton = nph_range[0]
+        else:
+            nphoton = np.random.randint(nph_range[0], nph_range[1])
+
+        print(nphoton)
+        # Loop over photons
+        for _ in range(nphoton):
             # Generate photon at position x0
             self.aPhoton.generate_photon(x0)
             # Propagate photon.... this is where the magic happens
@@ -161,6 +171,7 @@ class Generator:
 
         event_data = {}
         event_data['number'] = self.ievent
+        event_data['nphoton'] = nphoton
         event_data['true_position'] = x0
         event_data['pmt_top'] = pmt_signal_top
         event_data['fine_top'] = fine_signal_top
@@ -219,7 +230,7 @@ class Generator:
         return 0
     
     def write_event(self, event):
-        """Writes an even+t to the file.
+        """Writes an event to the file.
 
         
         """

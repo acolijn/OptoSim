@@ -403,6 +403,10 @@ def show_data(data_dir):
     subdirs = sorted(subdirs)
 
 
+    print(f"Found {len(subdirs)} subdirectories")
+    print("Subdirectories:")
+    print(subdirs)
+    
     attributes_list = []
     # Loop over subdirectories
     for subdir in subdirs:

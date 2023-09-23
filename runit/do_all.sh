@@ -6,3 +6,4 @@ python generate_jobs.py --mcid=2 --njobs=100 --config=config_nev10k_nph10k_nosca
 python generate_jobs.py --mcid=3 --njobs=100 --config=config_nev10k_nph10k_nodiffuse.json
 python generate_jobs.py --mcid=4 --njobs=100 --config=config_nev10k_nph10k_v1.json
 python generate_jobs.py --mcid=5 --njobs=100 --config=config_nev10k_nph10k_noscatter_v1.json
+python generate_jobs.py --mcid=6 --njobs=100 --config=config_nev10k_nph1k-25k.json
