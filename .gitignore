@@ -21,7 +21,7 @@ _trash
 data/
 logs/
 tmp/
-
+venv_optosim/
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
