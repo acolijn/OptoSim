@@ -7,7 +7,8 @@ import os
 
 scatter_types = ["specular", "diffuse", "lambertian", "mirror", "dielectric", "dielectric_metal"]
 
-from optosim.simulation.optical_photon import OpticalPhoton
+from optosim.simulation.optical_photon import OpticalPhoton, XENON_GAS, XENON_LIQ
+from optosim.simulation.utils import intersection_with_cylinder, calculate_position, generate_lambertian
 
 
 class OpticalPhotonDisplay(OpticalPhoton):
