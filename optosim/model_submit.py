@@ -55,7 +55,7 @@ def main():
             log=log,
             jobname=jobname,
             mem_per_cpu=4000,
-            queue="short",
+            queue="generic",
         )
 
         print(f"Submitted job with {i_pmts_per_dim}pmts for run {args.run_id}")

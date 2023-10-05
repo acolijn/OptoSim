@@ -2,6 +2,9 @@ import numpy as np
 import scipy.interpolate
 import scipy.ndimage
 
+import os
+from optosim.settings import MODEL_DIR
+
 
 def reshape_data(X):
     """
@@ -184,3 +187,13 @@ def r_squared(true, pred):
         float: The R^2.
     """
     return 1 - np.sum((np.asarray(true) - np.asarray(pred)) ** 2) / np.sum((np.asarray(true) - np.mean(true)) ** 2)
+
+
+def load_model(filename):
+    """
+    Load a model from the models directory.
+    """
+    with open(os.path.join(MODEL_DIR, filename), "rb") as f:
+        model = pickle.load(f)
+
+    return model
