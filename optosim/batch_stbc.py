@@ -5,6 +5,18 @@ cfuselli@nikhef.nl
 
 Module that handles job submission on stomboot, adapted from utilix sbatchq (XENON)
 
+For more information on the queue, see:
+https://www.nikhef.nl/pdp/computing-course/batch/stoomboot.html
+
+Queue	Default Length	Max Length
+express	10m	10m
+generic	24h	24h
+gpu-nv	24h	96h
+gpu-amd	24h	96h
+long	48h	96h
+multicore	96h	96h
+short	4h	4h
+
 """
 
 import argparse
@@ -20,6 +32,7 @@ sbatch_template = """#!/bin/bash
 #PBS -j oe
 #PBS -o {log}
 #PBS -l pmem={mem_per_cpu}
+#PBS -q {queue}
 
 echo "starting script!"
 
@@ -34,6 +47,7 @@ TMPDIR = os.path.join(os.environ.get('user', '.'), 'tmp')
 def submit_job(jobstring,
                log='job.log',
                jobname='somejob',
+               queue='generic',
                sbatch_file=None,
                dry_run=False,
                mem_per_cpu=1000,
@@ -48,25 +62,23 @@ def submit_job(jobstring,
     
     :param jobstring: the command to execute
     :param log: where to store the log file of the job
-    :param jobname: how to name this job
-    :param sbatch_file: where to write the job script to
-    :param dry_run: only print how the job looks like
-    :param mem_per_cpu: mb requested for job
-    :param container: name of the container to activate
-    :param bind: which paths to add to the container
-    :param cpus_per_task: cpus requested for job
-    :param hours: max hours of a job
-    :param kwargs: are ignored
-    :return: None
+    :param jobname: the name of the job
+    :param queue: the queue to submit the job to
+    :param sbatch_file: the file to write the sbatch script to
+    :param dry_run: if True, do not submit the job
+    :param mem_per_cpu: the memory per cpu in MB
+    :param cpus_per_task: the number of cpus per task
+    :param hours: the number of hours to run the job for
+    :param kwargs: additional arguments to pass to the sbatch script
+    :return:
+
     """
     
 
     sbatch_script = sbatch_template.format(jobname=jobname, 
                                            log=log, 
-                                           qos=qos, 
-                                           partition=partition,
-                                           account=account, 
                                            job=jobstring, 
+                                           queue=queue,
                                            mem_per_cpu=mem_per_cpu,
                                            cpus_per_task=cpus_per_task, 
                                            hours=hours
