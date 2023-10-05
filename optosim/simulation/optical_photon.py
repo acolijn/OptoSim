@@ -3,14 +3,11 @@ import math
 import random
 import json,os
 
-from PTFEScatter import scatter_on_ptfe  # import the scattering data
-from Utils import intersection_with_cylinder, calculate_position, generate_lambertian 
+from optosim.simulation.utils import intersection_with_cylinder, calculate_position, generate_lambertian 
+
+from optosim.simulation.ptfe_scatter import scatter_on_ptfe
 
 from sys import exit
-
-# import ptfe_utils
-
-# random.seed(0)
 
 XENON_GAS = 0
 XENON_LIQ = 1
@@ -43,6 +40,7 @@ class OpticalPhoton:
         A.P. Colijn
 
         """
+
         # Read configuration file
         self.config_file = kwargs.get('config', 'config.json')
         if os.path.isfile(self.config_file):

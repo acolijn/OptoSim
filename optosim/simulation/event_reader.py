@@ -8,7 +8,6 @@ import pandas as pd
 import matplotlib.pyplot as plt
 from matplotlib.patches import Circle, Rectangle
 
-
 class EventReader:
     """A class for reading optical simulation data from a list of files
     
