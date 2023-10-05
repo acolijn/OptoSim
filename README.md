@@ -61,19 +61,20 @@ this will submit 10 jobs to the cluster, each processing a different batch of th
 To run a super-resolution model, move to the optosim directory and do:
 
 ```bash
-python model_train.py --run_id mc0001 --pmts_per_dim 5
+python model_train.py --run_id mc0001 --pmts_per_dim 5 --nmax 1000
 ```
 
-this will train a super-resolution model for run mc0001 (assuming that the data has been already produced with the previous commands), using the information of the optical simulation with a fine grid of 5x5 PMTs. The model will be stored in the model folder specified in the settings.ini file. The name of the model will be f'model_{pmts_per_dim}x{pmts_per_dim}_{run_id}.pkl'.
+this will train a super-resolution model for run mc0001 (assuming that the data has been already produced with the previous commands), using the information of the optical simulation with a fine grid of 5x5 PMTs. The nmax argument sets the maximum number of events to read from the files, it deafults at 10 millions. The model will be stored in the model folder specified in the settings.ini file. The name of the model will be f'model_{pmts_per_dim}x{pmts_per_dim}_{run_id}.pkl'.
 
 To submit multiple jobs to the cluster, each training a different super-resolution model, do:
 
 ```bash
-python model_submit.py --run_id mc0001 --pmts_per_dim 5 10 15
+python model_submit.py --run_id mc0001 --pmts_per_dim 5 10 15 --nmax 1000
 ```
 
 in this case it is possible to specify multiple values for the pmts_per_dim parameter, and a different job will be submitted for each value. Note that in order to be able to submit jobs to the cluster, the setup.sh script must have been run before. Job submission will only work for users with access to the stoomboot cluster. 
 
+Warning: running a model training with the same run_id and pmts_per_dim as a previous one will overwrite the previous model.
 
 ## Contributing
 If you would like to contribute to this project, please follow these guidelines:

@@ -8,7 +8,6 @@ def parse_args():
     parser.add_argument("--run_id", help="Run ID", required=True)
     parser.add_argument("--job_id", type=int, help="Job ID", required=True)
     parser.add_argument("--config", help="Configuration file", default="config.json")
-    parser.add_argument("--force_write", help="Force write", default=False)
     return parser.parse_args()
 
 
@@ -30,10 +29,6 @@ def main():
         if not os.path.exists(_dir):
             os.makedirs(_dir)
 
-    # TODO
-    # Check if the run_id and job_id already exists
-    # Manage force_write somehow
-
     # read the configuration filename
     config_file = args.config
     print("Reading configuration from file: {}".format(config_file))
@@ -45,6 +40,8 @@ def main():
 
     if not os.path.exists(run_id_dir):
         os.makedirs(run_id_dir)
+    else:
+        raise ValueError(f"Run ID {run_id} already exists. Please delete the data first.")
 
     filename = os.path.join(run_id_dir, f"{run_id}.{job_id:04}.hd5f")
 

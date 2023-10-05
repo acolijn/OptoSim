@@ -6,7 +6,6 @@ import os
 def parse_args():
     parser = argparse.ArgumentParser()
     parser.add_argument("--config", help="Configuration file", default="config_example.json")
-    parser.add_argument("--force_write", help="Force write to existing data directory", default=False)
     parser.add_argument("--run_id", help="Run ID", required=True)
     parser.add_argument("--njobs", help="Number of jobs", default=10)
     args = parser.parse_args()
@@ -32,7 +31,7 @@ def main():
         echo "Running job {i} for run {args.run_id} with config {args.config}"
 
         # Run the job
-        python {run_mc_file} --run_id={args.run_id} --job_id={i} --config={args.config} --force_write={args.force_write}
+        python {run_mc_file} --run_id={args.run_id} --job_id={i} --config={args.config}
 
         echo "Finished"
 
