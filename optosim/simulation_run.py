@@ -22,8 +22,6 @@ def main():
     import optosim
     from optosim.settings import LOG_DIR, DATA_DIR, TMP_DIR
 
-    # Parse the arguments
-
     # Create the directories if it doesn't exist
     for _dir in [LOG_DIR, DATA_DIR, TMP_DIR]:
         if not os.path.exists(_dir):
@@ -41,7 +39,7 @@ def main():
     if not os.path.exists(run_id_dir):
         os.makedirs(run_id_dir)
     else:
-        raise ValueError(f"Run ID {run_id} already exists. Please delete the data first.")
+        raise ValueError(f"Run ID {run_id} already exists. Please use another run_id.")
 
     filename = os.path.join(run_id_dir, f"{run_id}.{job_id:04}.hd5f")
 
