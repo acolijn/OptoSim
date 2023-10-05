@@ -2,7 +2,7 @@ from sklearn.neural_network import MLPRegressor
 import matplotlib.pyplot as plt
 import numpy as np
 
-from ModelUtils import reshape_data, weighted_average_estimator, downsample_heatmaps_to_dimensions, mse, r_squared
+from optosim.super_resolution.model_utils import reshape_data, weighted_average_estimator, downsample_heatmaps_to_dimensions, mse, r_squared
 
 class SuperResolutionModel:
     def __init__(self, low_to_high_res_net_params=None, high_res_to_true_net_params=None):
