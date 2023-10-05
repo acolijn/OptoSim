@@ -2,7 +2,11 @@ import numpy as np
 import json
 import os
 import h5py
-import OpticalPhoton as op
+
+import optosim
+
+from optosim.settings import DATA_DIR, OPTOSIM_DIR, CONFIG_DIR
+import optosim.simulation.optical_photon as op
 
 class Generator:
     """ Class for generating S2-like events. Photons are generated from positions as 
@@ -51,22 +55,38 @@ class Generator:
 
     """
     
-    def __init__(self, **kwargs):
+    def __init__(self, filename, config_file='config_example.json', **kwargs):
         """Initializes the generator class. The configuration is read from the config file.
 
         Parameters
         ----------
+        filename : str
+            Filename of output file. Needs to be an absolute path ending with .hd5f
         config : str
-            Filename of configuration file. Default is 'config.json'.
+            Filename of configuration file. Default is 'config_example.json'.
 
         """
-        # Read configuration file
-        self.config_file = kwargs.get('config', 'config.json')
+        
+
+        # Read configuration file       
+        self.config_file = os.path.join(CONFIG_DIR, config_file)
+
         if os.path.isfile(self.config_file):
             print("Generator::Reading configuration from file: {}".format(self.config_file))
             self.config = json.load(open(self.config_file, 'r'))
         else:
             raise ValueError("Config file does not exist. {}".format(self.config_file))
+        
+
+        # Check filename extension
+        if not filename.endswith('.hd5f'):
+            raise ValueError("Filename needs to end with .hd5f")
+        
+        # Check if the path is not a relative path
+        if not os.path.isabs(filename):
+            raise ValueError("Filename needs to be an absolute path.")
+
+        self.filename = filename
         
         # Initialize the detector
         self.radius = self.config['geometry']['radius']
@@ -197,7 +217,7 @@ class Generator:
         """
 
         batch_size = self.config['nevents']
-        self.open_file(self.config['filename']) # Open file for writing events to       
+        self.open_file(self.filename) # Open file for writing events to       
 
         for i in range(batch_size):
             if i%10 == 0:

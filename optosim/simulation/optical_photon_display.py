@@ -1,6 +1,4 @@
 
-from OpticalPhoton import *
-
 import numpy as np
 
 import matplotlib.pyplot as plt
@@ -9,6 +7,8 @@ from matplotlib.animation import FuncAnimation
 import os
 
 scatter_types = ['specular', 'diffuse', 'lambertian', 'mirror', 'dielectric', 'dielectric_metal']
+
+from optosim.simulation.optical_photon import OpticalPhoton
 
 class OpticalPhotonDisplay(OpticalPhoton):
     """
@@ -62,6 +62,7 @@ class OpticalPhotonDisplay(OpticalPhoton):
 
         A.P. Colijn
         """
+
         super().__init__(**kwargs)
         self.path = []  # List to store the photon's path
         self._last_point = None
