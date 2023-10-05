@@ -1,9 +1,9 @@
 import numpy as np
 import math
 import random
-import json,os
+import json, os
 
-from optosim.simulation.utils import intersection_with_cylinder, calculate_position, generate_lambertian 
+from optosim.simulation.utils import intersection_with_cylinder, calculate_position, generate_lambertian
 
 from optosim.simulation.ptfe_scatter import scatter_on_ptfe
 
@@ -15,18 +15,20 @@ PTFE = 2
 PMT = 3
 VOID = 4
 
-medium_names = ['GXe', 'LXe', 'PTFE', 'PMT', "VOID"]
-refractive_index = np.array([1., 1.64, 1.69, 3.5, 1.0])
+medium_names = ["GXe", "LXe", "PTFE", "PMT", "VOID"]
+refractive_index = np.array([1.0, 1.64, 1.69, 3.5, 1.0])
+
 
 class OpticalPhoton:
     """
-    Class to propagate an optical photon through a simplified version of a XENON detector To keep things simple, 
+    Class to propagate an optical photon through a simplified version of a XENON detector To keep things simple,
     the detector is modelled as a cylinder with a flat top and bottom.
 
     In addition, the code is not segmented into separate classes in order to keep the code fast and simple.
 
     A.P. Colijn
     """
+
     def __init__(self, **kwargs):
         """
         Initialize the optical photon
@@ -34,7 +36,7 @@ class OpticalPhoton:
         Parameters
         ----------
         config(str) : str
-            The configuration file -> this sets the default values for 
+            The configuration file -> this sets the default values for
             the detector geometry. See Generator.py for documentation on the config file.
 
         A.P. Colijn
@@ -42,31 +44,31 @@ class OpticalPhoton:
         """
 
         # Read configuration file
-        self.config_file = kwargs.get('config', 'config.json')
+        self.config_file = kwargs.get("config", "config.json")
         if os.path.isfile(self.config_file):
             print("OpticalPhoton::Reading configuration from file: {}".format(self.config_file))
-            self.config = json.load(open(self.config_file, 'r'))
+            self.config = json.load(open(self.config_file, "r"))
         else:
             raise ValueError("Config file does not exist.")
 
-        self.R = self.config['geometry']['radius']
-        self.ztop = self.config['geometry']['ztop']
-        self.zliq = self.config['geometry']['zliq']
-        self.zbot = self.config['geometry']['zbot']
+        self.R = self.config["geometry"]["radius"]
+        self.ztop = self.config["geometry"]["ztop"]
+        self.zliq = self.config["geometry"]["zliq"]
+        self.zbot = self.config["geometry"]["zbot"]
 
-        # exent of the ptfe cylinder. If a photon intersects with the cylinder outside 
+        # exent of the ptfe cylinder. If a photon intersects with the cylinder outside
         # this range, it is terminated.
-        if 'ptfe_zmin' not in self.config['geometry']:
+        if "ptfe_zmin" not in self.config["geometry"]:
             print("'ptfe_zmin' not in config: setting to zbot")
             self.ptfe_zmin = self.zbot
         else:
-            self.ptfe_zmin = self.config['geometry']['ptfe_zmin']
+            self.ptfe_zmin = self.config["geometry"]["ptfe_zmin"]
 
-        if 'ptfe_zmax' not in self.config['geometry']:
+        if "ptfe_zmax" not in self.config["geometry"]:
             print("'ptfe_zmax' not in config: setting to ztop")
             self.ptfe_zmax = self.ztop
         else:
-            self.ptfe_zmax = self.config['geometry']['ptfe_zmax']
+            self.ptfe_zmax = self.config["geometry"]["ptfe_zmax"]
 
         # initial and current position
         self.x0 = np.zeros(3)
@@ -78,16 +80,16 @@ class OpticalPhoton:
         self.detected = False
 
         # set the photon position
-        if 'set_no_scatter' in self.config:
-            print("'set_no_scatter' set to {}".format(self.config['set_no_scatter']))
-            self.no_scattering = self.config['set_no_scatter']
+        if "set_no_scatter" in self.config:
+            print("'set_no_scatter' set to {}".format(self.config["set_no_scatter"]))
+            self.no_scattering = self.config["set_no_scatter"]
         else:
             print("'set_no_scatter' not in config: setting to False")
             self.no_scattering = False
 
-        if 'set_experimental_scatter_model' in self.config:
-            print("'set_experimental_scatter_model' set to {}".format(self.config['set_experimental_scatter_model']))
-            self.experimental_scatter_model = self.config['set_experimental_scatter_model']
+        if "set_experimental_scatter_model" in self.config:
+            print("'set_experimental_scatter_model' set to {}".format(self.config["set_experimental_scatter_model"]))
+            self.experimental_scatter_model = self.config["set_experimental_scatter_model"]
         else:
             print("'set_experimental_scatter_model' not in config: setting to True")
             self.experimental_scatter_model = True
@@ -105,10 +107,9 @@ class OpticalPhoton:
         """
         random.seed(seed)
 
-
     def set_experimental_scatter_model(self, experimental_scatter_model):
         """
-        Switch on/off the experimental scattering model for 175 nmphotons on PTFE from GXe/LXe  
+        Switch on/off the experimental scattering model for 175 nmphotons on PTFE from GXe/LXe
 
         Parameters
         ----------
@@ -118,7 +119,7 @@ class OpticalPhoton:
         A.P. Colijn
         """
         self.experimental_scatter_model = experimental_scatter_model
-        
+
     def set_no_scattering(self, no_scattering):
         """
         Switch off scattering
@@ -144,7 +145,7 @@ class OpticalPhoton:
         A.P. Colijn
         """
         self.x = x
-    
+
     def get_photon_position(self):
         """
         Get the photon position
@@ -175,7 +176,7 @@ class OpticalPhoton:
         """
         margin = 1e-6
 
-        r = np.sqrt(x[0]**2 + x[1]**2)
+        r = np.sqrt(x[0] ** 2 + x[1] ** 2)
         z = x[2]
 
         if r >= self.R:
@@ -184,15 +185,15 @@ class OpticalPhoton:
             else:
                 medium = VOID
         else:
-            if ((z >= self.zliq) and (z <= self.ztop - margin)):
+            if (z >= self.zliq) and (z <= self.ztop - margin):
                 medium = XENON_GAS
-            elif ((z < self.zliq) and (z >= self.zbot + margin)):
+            elif (z < self.zliq) and (z >= self.zbot + margin):
                 medium = XENON_LIQ
-            elif ((z > self.ztop-margin) or (z < self.zbot+margin)):
+            elif (z > self.ztop - margin) or (z < self.zbot + margin):
                 medium = PMT
             else:
-                print('error')
-                exit()         
+                print("error")
+                exit()
 
         return medium
 
@@ -204,7 +205,7 @@ class OpticalPhoton:
         """
         margin = 1e-6
 
-        r = np.sqrt(self.x[0]**2 + self.x[1]**2)
+        r = np.sqrt(self.x[0] ** 2 + self.x[1] ** 2)
         if r >= self.R:
             medium = PTFE
         else:
@@ -213,11 +214,11 @@ class OpticalPhoton:
                 medium = XENON_GAS
             if (z < self.zliq) and (z >= self.zbot + margin):
                 medium = XENON_LIQ
-            if (z > self.ztop-margin) or (z < self.zbot+margin):
-                medium = PTFE  
+            if (z > self.ztop - margin) or (z < self.zbot + margin):
+                medium = PTFE
 
         self.current_medium = medium
-    
+
     def generate_photon(self, x0):
         """
         Generate a photon with a random direction t0=(tx,ty,tz) at position x0. The direction is isotropic.
@@ -242,7 +243,7 @@ class OpticalPhoton:
             print("Error: photon position is outside the detector")
             exit(0)
 
-        self.x0 = np.array(x0)      
+        self.x0 = np.array(x0)
         self.set_photon_position(self.x0)
         # the photon is alive...
         self.alive = True
@@ -251,8 +252,8 @@ class OpticalPhoton:
         # Set the current medium
         self.set_medium()
 
-        return 
-    
+        return
+
     def position_is_inside_detector(self, x):
         """
         Check if the position x is inside the detector
@@ -270,7 +271,7 @@ class OpticalPhoton:
         """
 
         # check if the position is inside the cylinder
-        r = np.sqrt(x[0]**2 + x[1]**2)
+        r = np.sqrt(x[0] ** 2 + x[1] ** 2)
         if r > self.R:
             # outside the cylinder
             return False
@@ -321,7 +322,7 @@ class OpticalPhoton:
         A.P. Colijn
         """
         return self.alive
-    
+
     def is_detected(self):
         """
         Check if the photon is detected
@@ -332,7 +333,7 @@ class OpticalPhoton:
 
         A.P. Colijn
         """
-        return self.detected    
+        return self.detected
 
     def get_refractive_index(self, medium):
         """Returns the refractive index of the medium.
@@ -344,8 +345,8 @@ class OpticalPhoton:
             float: refractive index
         """
         return refractive_index[medium]
-    
-    def get_medium_name(self, medium):  
+
+    def get_medium_name(self, medium):
         """Returns the name of the medium.
 
         Args:
@@ -363,26 +364,25 @@ class OpticalPhoton:
         Args:
             xint (array): intersection point
             dir (array): direction of photon
-            nvec (array): normal vector to surface  
+            nvec (array): normal vector to surface
 
         Returns:
             array, array: reflected ray, transmitted ray
 
         A.P. Colijn
-        """    
+        """
 
         if np.linalg.norm(dir) != 0.0:
             dir = dir / np.linalg.norm(dir)
         else:
-            print('error: direction vector has zero length')
-            return 1
-        
-        if np.linalg.norm(nvec) != 0.0:
-            nvec = nvec / np.linalg.norm(nvec)  
-        else:
-            print('error: normal vector has zero length')
+            print("error: direction vector has zero length")
             return 1
 
+        if np.linalg.norm(nvec) != 0.0:
+            nvec = nvec / np.linalg.norm(nvec)
+        else:
+            print("error: normal vector has zero length")
+            return 1
 
         # 1. get the medium in which the photon is propagating
         medium1 = self.current_medium
@@ -390,20 +390,20 @@ class OpticalPhoton:
         # 2. get the medium on which the photon is incident
         #    calculate the material by stepping into minus the direction of the normal vector to the material we are scattering on. Then get the material at that position.
         #   This is a bit of a hack, but it works.
-        medium2 = self.get_medium(calculate_position(xint, nvec, -1e-4))         
+        medium2 = self.get_medium(calculate_position(xint, nvec, -1e-4))
         n2 = self.get_refractive_index(medium2)
 
         # 3. calculate the angle of incidence
         dot_product = np.dot(-dir, nvec)
         clamped_value = min(max(dot_product, -1.0), 1.0)
         if abs(dot_product) > 1.0:
-            print('error: dot_product > 1.0')
+            print("error: dot_product > 1.0")
             self.print()
         theta1 = math.acos(clamped_value)
         # 4. calculate the average reflected power. I assume unpolarized light....
-        
+
         R_diff = -1.0
-        if (medium2 == PTFE) and self.experimental_scatter_model: # PTFE reflection based on experimental data 
+        if (medium2 == PTFE) and self.experimental_scatter_model:  # PTFE reflection based on experimental data
             R_average, R_diff, _, _ = scatter_on_ptfe(theta1, medium_names[medium1])
         else:  # standard Fresnel reflection/transmission
             R_average, _ = self.fresnel_coefficients_average(n1, n2, theta1)
@@ -412,43 +412,44 @@ class OpticalPhoton:
 
         ##print('x before scatter =', xint,'direction before scatter', self.t, 'medium before scatter', medium1, 'medium after scatter', medium2, 'r_average', R_average)
         if self.no_scattering or (medium2 == VOID):
-            rran = 1.0 # force transmission
+            rran = 1.0  # force transmission
         else:
             rran = random.uniform(0, 1)
 
-        if  rran < R_average:
+        if rran < R_average:
             # reflected
-            #print("reflected")
+            # print("reflected")
             # 6. calculate the reflected direction
 
             if (rran < R_diff) and (medium2 == PTFE) and self.experimental_scatter_model:
                 # diffuse reflection
-                #print('... diffuse reflection from PTFE. experimental model =', self.experimental_scatter_model)
+                # print('... diffuse reflection from PTFE. experimental model =', self.experimental_scatter_model)
                 reflected_dir = generate_lambertian(nvec)
 
             else:
                 # specular reflection
-                #print('... specular reflection')
+                # print('... specular reflection')
                 in_dir = self.t
                 dot_product = np.dot(-in_dir, nvec)
                 reflected_dir = in_dir + 2 * dot_product * nvec
                 # medium does not change.....
-            
+
             self.t = reflected_dir
             self.x = xint
 
         else:
-            # transmitted 
-            #print("transmitted")
-            # 6. calculate the transmitted direction           
+            # transmitted
+            # print("transmitted")
+            # 6. calculate the transmitted direction
             in_dir = self.t
             dot_product = np.dot(-in_dir, nvec)
-            refracted_dir = (n1 / n2) * (in_dir + dot_product * nvec) - np.sqrt(1.0 - (n1 / n2)**2 * (1.0 - dot_product**2)) * nvec
+            refracted_dir = (n1 / n2) * (in_dir + dot_product * nvec) - np.sqrt(
+                1.0 - (n1 / n2) ** 2 * (1.0 - dot_product**2)
+            ) * nvec
 
             self.t = refracted_dir
             self.x = xint
             self.current_medium = medium2
-
 
         ##print("x after scatter = ", self.x, "direction after scatter", self.t, "medium after scatter", self.current_medium)
 
@@ -464,7 +465,7 @@ class OpticalPhoton:
             The refractive index of the medium in which the photon is incident
         n2(float) : float
             The refractive index of the medium in which the photon is transmitted
-        theta_i(float) : float  
+        theta_i(float) : float
             The angle of incidence
 
         Returns
@@ -486,23 +487,21 @@ class OpticalPhoton:
         if sin_theta_t > 1.0:
             r_parallel = 1.0
             r_perpendicular = 1.0
-            return r_parallel, r_perpendicular # Total internal reflection, R=1, T=0
-        
+            return r_parallel, r_perpendicular  # Total internal reflection, R=1, T=0
+
         cos_theta_i = np.cos(theta_i)
         cos_theta_t = np.sqrt(1.0 - sin_theta_t**2)
 
         ##print('cos_theta_i', cos_theta_i, 'cos_theta_t', cos_theta_t,'n1',n1,'n2',n2)
 
         # Calculate the coefficients for p-polarization
-        r_parallel = ((n1 * cos_theta_i - n2 * cos_theta_t) /
-                    (n1 * cos_theta_i + n2 * cos_theta_t))
+        r_parallel = (n1 * cos_theta_i - n2 * cos_theta_t) / (n1 * cos_theta_i + n2 * cos_theta_t)
         # Calculate the coefficients for s-polarization
-        r_perpendicular = ((n2 * cos_theta_i - n1 * cos_theta_t) /
-                        (n2 * cos_theta_i + n1 * cos_theta_t))
+        r_perpendicular = (n2 * cos_theta_i - n1 * cos_theta_t) / (n2 * cos_theta_i + n1 * cos_theta_t)
 
-        #print('r_parallel', r_parallel, 'r_perpendicular', r_perpendicular)
+        # print('r_parallel', r_parallel, 'r_perpendicular', r_perpendicular)
         return r_parallel, r_perpendicular
-    
+
     def fresnel_coefficients_average(self, n1, n2, theta_i):
         """Calculate the average reflection and transmission coefficients for randomly polarized light.
 
@@ -525,27 +524,26 @@ class OpticalPhoton:
         A.P. Colijn
         """
         r_parallel, r_perpendicular = self.fresnel_coefficients(n1, n2, theta_i)
-    
+
         # Calculate the average coefficients for randomly polarized light
         R_average = 0.5 * (r_parallel**2 + r_perpendicular**2)
         T_average = 1 - R_average
-    
+
         return R_average, T_average
 
     def propagate(self):
         """
-        Propagate the photon through the detector. 
+        Propagate the photon through the detector.
 
         A.P. Colijn
         """
 
         propagating = True
-        #print("")
-        #print("NEXT")    
+        # print("")
+        # print("NEXT")
 
-        #self.print()    
+        # self.print()
         while propagating:
-
             # intersection with cylinder
             path_length = -100
             if self.current_medium == XENON_GAS:
@@ -555,34 +553,34 @@ class OpticalPhoton:
 
             #
             # Let the photon interact with a surface
-            # 
+            #
             # Several things can happen:
             # 1. the photon is reflected
             # 2. the photon is transmitted
             # 3. the photon is absorbed (not implemented yet - depends on mean free path of photons in xenon gas and liquid)
             # 4. if the photon is transmitted to the PMT, it is absorbed and detected
             # 5. if the photon is transmitted to the PTFE, it is terminated
-            # 
+            #
             # The position and direction of the photon are updated after the interaction.
             #
             # print(xint, self.t, nvec, path_length)
-            if path_length>0.0:
+            if path_length > 0.0:
                 istat = self.interact_with_surface(xint, self.t, nvec)
                 if istat == 1:
-                    print('error in interact_with_surface')
-                    self.alive = False 
+                    print("error in interact_with_surface")
+                    self.alive = False
             else:
                 # no intersection with cylinder
-                print('no intersection with cylinder')
+                print("no intersection with cylinder")
                 self.alive = False
                 return 0
-            #self.print()
+            # self.print()
             #
             # Check if the photon should continue propagating, be terminated, or be detected
             #
             propagating = self.photon_propagation_status()
 
-        #print('alive =',self.alive, 'detected =',self.detected, 'x =', self.x, 't =', self.t, 'medium =', self.current_medium)
+        # print('alive =',self.alive, 'detected =',self.detected, 'x =', self.x, 't =', self.t, 'medium =', self.current_medium)
         return 0
 
     def photon_propagation_status(self):
@@ -598,7 +596,7 @@ class OpticalPhoton:
         # Check if the photon is still alive
         if not self.alive:
             return False
-        
+
         # Check if the photon is still inside the detector
         if self.current_medium == PMT:
             # photon is detected
@@ -612,12 +610,12 @@ class OpticalPhoton:
         else:
             # photon is still propagating
             return True
-        
+
     def print(self):
         """
         Print the photon position and direction
 
         A.P. Colijn
         """
-        print('x =', self.x, 't =', self.t, 'medium =', self.current_medium)
+        print("x =", self.x, "t =", self.t, "medium =", self.current_medium)
         return 0

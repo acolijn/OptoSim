@@ -4,32 +4,26 @@ import os
 
 
 def parse_args():
-
     parser = argparse.ArgumentParser()
-    parser.add_argument('--config', help='Configuration file', default='config_example.json')
-    parser.add_argument(
-        '--force_write', 
-        help='Force write to existing data directory', 
-        default=False)
-    parser.add_argument('--run_id', help='Run ID', required=True)
-    parser.add_argument('--njobs', help='Number of jobs', default=10)
+    parser.add_argument("--config", help="Configuration file", default="config_example.json")
+    parser.add_argument("--force_write", help="Force write to existing data directory", default=False)
+    parser.add_argument("--run_id", help="Run ID", required=True)
+    parser.add_argument("--njobs", help="Number of jobs", default=10)
     args = parser.parse_args()
 
     return args
 
-def main():
 
+def main():
     # Parse the command line arguments
     args = parse_args()
 
     from optosim.settings import OPTOSIM_DIR, PROJECT_DIR, LOG_DIR
 
-    run_mc_file = os.path.join(OPTOSIM_DIR, 'simulation_run.py')
-
+    run_mc_file = os.path.join(OPTOSIM_DIR, "simulation_run.py")
 
     for i in range(args.njobs):
-
-        # Make jobstring 
+        # Make jobstring
         jobstring = f"""
 
         cd {PROJECT_DIR}
@@ -44,19 +38,20 @@ def main():
 
         """
 
-        log = os.path.join(LOG_DIR, f'job_sim_{args.run_id}_{i}.log')
-        jobname = f'optosim_{args.run_id}_{i:04}'
+        log = os.path.join(LOG_DIR, f"job_sim_{args.run_id}_{i}.log")
+        jobname = f"optosim_{args.run_id}_{i:04}"
 
         # Submit the job
         submit_job(
-            jobstring, 
+            jobstring,
             log=log,
             jobname=jobname,
             mem_per_cpu=4000,
-            queue='short',
+            queue="short",
         )
 
-        print(f'Submitted job {i} for run {args.run_id} with config {args.config}')
+        print(f"Submitted job {i} for run {args.run_id} with config {args.config}")
 
-if __name__ == '__main__':
+
+if __name__ == "__main__":
     main()

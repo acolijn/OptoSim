@@ -3,7 +3,7 @@ Carlo Fuselli
 cfuselli@nikhef.nl
 -------------------
 
-Module that handles job submission on stomboot, adapted from utilix sbatchq (XENON)
+Module that handles job submission on stoomboot, adapted from utilix sbatchq (XENON)
 
 For more information on the queue, see:
 https://www.nikhef.nl/pdp/computing-course/batch/stoomboot.html
@@ -42,24 +42,25 @@ echo "Script complete, bye!"
 
 """
 
-TMPDIR = os.path.join(os.environ.get('user', '.'), 'tmp')
+TMPDIR = os.path.join(os.environ.get("user", "."), "tmp")
 
-def submit_job(jobstring,
-               log='job.log',
-               jobname='somejob',
-               queue='generic',
-               sbatch_file=None,
-               dry_run=False,
-               mem_per_cpu=1000,
-               cpus_per_task=1,
-               hours=None,
-               **kwargs
-               ):
-    
+
+def submit_job(
+    jobstring,
+    log="job.log",
+    jobname="somejob",
+    queue="generic",
+    sbatch_file=None,
+    dry_run=False,
+    mem_per_cpu=1000,
+    cpus_per_task=1,
+    hours=None,
+    **kwargs
+):
     """
-    
+
     See XENONnT utilix function sbatcth for info
-    
+
     :param jobstring: the command to execute
     :param log: where to store the log file of the job
     :param jobname: the name of the job
@@ -73,16 +74,16 @@ def submit_job(jobstring,
     :return:
 
     """
-    
 
-    sbatch_script = sbatch_template.format(jobname=jobname, 
-                                           log=log, 
-                                           job=jobstring, 
-                                           queue=queue,
-                                           mem_per_cpu=mem_per_cpu,
-                                           cpus_per_task=cpus_per_task, 
-                                           hours=hours
-                                          )
+    sbatch_script = sbatch_template.format(
+        jobname=jobname,
+        log=log,
+        job=jobstring,
+        queue=queue,
+        mem_per_cpu=mem_per_cpu,
+        cpus_per_task=cpus_per_task,
+        hours=hours,
+    )
 
     if dry_run:
         print("=== DRY RUN ===")
@@ -91,11 +92,11 @@ def submit_job(jobstring,
 
     if sbatch_file is None:
         remove_file = True
-        _, sbatch_file = tempfile.mkstemp(suffix='.sh')
+        _, sbatch_file = tempfile.mkstemp(suffix=".sh")
     else:
         remove_file = False
 
-    with open(sbatch_file, 'w') as f:
+    with open(sbatch_file, "w") as f:
         f.write(sbatch_script)
 
     command = "qsub %s" % sbatch_file
@@ -105,6 +106,3 @@ def submit_job(jobstring,
 
     if remove_file:
         os.remove(sbatch_file)
-
-  
-    

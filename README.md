@@ -54,7 +54,7 @@ To submit multiple jobs to the cluster, each processing a different batch of the
 python submit_simulation.py --run_id mc0001 --config config_example.json --n_jobs 10
 ```
 
-this will submit 10 jobs to the cluster, each processing a different batch of the simulation for run mc0001, using the configuration file config_example.json in the config folder. The ouptup of the simulation will be stored in the data folder specified in the settings.ini file. The jobs will be submitted by default in the short queue on stomboot. The job submission is handled by the batch_stbc.py module.  Note that in order to be able to submit jobs to the cluster, the setup.sh script must have been run before. Job submission will only work for users with access to the stomboot cluster. 
+this will submit 10 jobs to the cluster, each processing a different batch of the simulation for run mc0001, using the configuration file config_example.json in the config folder. The ouptup of the simulation will be stored in the data folder specified in the settings.ini file. The jobs will be submitted by default in the short queue on stoomboot. The job submission is handled by the batch_stbc.py module.  Note that in order to be able to submit jobs to the cluster, the setup.sh script must have been run before. Job submission will only work for users with access to the stoomboot cluster. 
 
 ### Super-resolution
 
@@ -64,7 +64,7 @@ To run a super-resolution model, move to the optosim directory and do:
 python model_train.py --run_id mc0001 --pmts_per_dim 5
 ```
 
-this will train a super-resolution model for run mc0001 (assuming that the data has been already produced with the previous commands), using the information of the optical simulation with a fine grid of 5x5 PMTs. The model will be stored in the model folder specified in the settings.ini file.
+this will train a super-resolution model for run mc0001 (assuming that the data has been already produced with the previous commands), using the information of the optical simulation with a fine grid of 5x5 PMTs. The model will be stored in the model folder specified in the settings.ini file. The name of the model will be f'model_{pmts_per_dim}x{pmts_per_dim}_{run_id}.pkl'.
 
 To submit multiple jobs to the cluster, each training a different super-resolution model, do:
 
@@ -72,7 +72,7 @@ To submit multiple jobs to the cluster, each training a different super-resoluti
 python model_submit.py --run_id mc0001 --pmts_per_dim 5 10 15
 ```
 
-in this case it is possible to specify multiple values for the pmts_per_dim parameter, and a different job will be submitted for each value. Note that in order to be able to submit jobs to the cluster, the setup.sh script must have been run before. Job submission will only work for users with access to the stomboot cluster. 
+in this case it is possible to specify multiple values for the pmts_per_dim parameter, and a different job will be submitted for each value. Note that in order to be able to submit jobs to the cluster, the setup.sh script must have been run before. Job submission will only work for users with access to the stoomboot cluster. 
 
 
 ## Contributing

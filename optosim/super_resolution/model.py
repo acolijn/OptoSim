@@ -2,7 +2,14 @@ from sklearn.neural_network import MLPRegressor
 import matplotlib.pyplot as plt
 import numpy as np
 
-from optosim.super_resolution.model_utils import reshape_data, weighted_average_estimator, downsample_heatmaps_to_dimensions, mse, r_squared
+from optosim.super_resolution.model_utils import (
+    reshape_data,
+    weighted_average_estimator,
+    downsample_heatmaps_to_dimensions,
+    mse,
+    r_squared,
+)
+
 
 class SuperResolutionModel:
     def __init__(self, low_to_high_res_net_params=None, high_res_to_true_net_params=None):
@@ -15,20 +22,22 @@ class SuperResolutionModel:
         """
         if low_to_high_res_net_params is None:
             low_to_high_res_net_params = {
-                'hidden_layer_sizes': (100, 100),
-                'max_iter': 500,
+                "hidden_layer_sizes": (100, 100),
+                "max_iter": 500,
             }
         if high_res_to_true_net_params is None:
             high_res_to_true_net_params = {
-                'hidden_layer_sizes': (100, 100),
-                'max_iter': 500,
+                "hidden_layer_sizes": (100, 100),
+                "max_iter": 500,
             }
 
         self.low_to_high_res_net = MLPRegressor(**low_to_high_res_net_params)
         self.high_res_to_true_net = MLPRegressor(**high_res_to_true_net_params)
 
-    def create_datasets(self, X_low_res, X_high_res, y_true_pos, train_fraction=0.8, high_res_hight=20, high_res_width=20):
-        n_train = int(train_ratio*len(X))
+    def create_datasets(
+        self, X_low_res, X_high_res, y_true_pos, train_fraction=0.8, high_res_hight=20, high_res_width=20
+    ):
+        n_train = int(train_ratio * len(X))
 
         X_train = np.asarray(X_low_res[:n_train])
         y_train = downsample_heatmaps_to_dimensions(np.asarray(X_high_res[:n_train]), high_res_hight, high_res_width)
@@ -105,30 +114,30 @@ class SuperResolutionModel:
         mse_val = mse(y_true_pos_flat, y_pred)
         r_squared_val = r_squared(y_true_pos_flat, y_pred)
 
-        return {'MSE': mse_val, 'R^2': r_squared_val}
+        return {"MSE": mse_val, "R^2": r_squared_val}
 
     def plot_loss_curve(self):
         """
         Plot the training loss curve.
         """
-        if hasattr(self.low_to_high_res_net, 'loss_curve_'):
+        if hasattr(self.low_to_high_res_net, "loss_curve_"):
             plt.figure(figsize=(10, 7))
             plt.subplot(2, 1, 1)
-            plt.plot(self.low_to_high_res_net.loss_curve_, label='Low to High Res Loss', color='blue')
-            plt.plot(self.high_res_to_true_net.loss_curve_, label='High Res to True Loss', color='orange')
-            plt.xlabel('Epochs')
-            plt.ylabel('Loss')
+            plt.plot(self.low_to_high_res_net.loss_curve_, label="Low to High Res Loss", color="blue")
+            plt.plot(self.high_res_to_true_net.loss_curve_, label="High Res to True Loss", color="orange")
+            plt.xlabel("Epochs")
+            plt.ylabel("Loss")
             plt.legend()
-            plt.title('Training Loss Curves')
-            
+            plt.title("Training Loss Curves")
+
             plt.subplot(2, 1, 2)
-            plt.plot(self.low_to_high_res_net.loss_curve_, label='Low to High Res Loss', color='blue')
-            plt.plot(self.high_res_to_true_net.loss_curve_, label='High Res to True Loss', color='orange')
+            plt.plot(self.low_to_high_res_net.loss_curve_, label="Low to High Res Loss", color="blue")
+            plt.plot(self.high_res_to_true_net.loss_curve_, label="High Res to True Loss", color="orange")
             plt.ylim(0, 10)
-            plt.xlabel('Epochs')
-            plt.ylabel('Loss')
+            plt.xlabel("Epochs")
+            plt.ylabel("Loss")
             plt.legend()
-            plt.title('Zoom Training Loss Curves')
+            plt.title("Zoom Training Loss Curves")
             plt.show()
         else:
             print("Loss curves not available. Ensure you have trained the models.")
@@ -161,28 +170,38 @@ class SuperResolutionModel:
 
             # Plot input low-resolution heatmap
             plt.subplot(1, 3, 1)
-            plt.imshow(X_low_res[i], cmap='hot', interpolation='nearest', origin='lower', extent=[-2.5, 2.5, -2.5, 2.5])
-            plt.scatter(y_true_pos[i, 0], y_true_pos[i, 1], c='r', marker='x', label='True Position')
-            plt.scatter(y_pred_pos[i, 0], y_pred_pos[i, 1], c='b', label='Predicted Position')
-            plt.scatter(simple_pred_pos[i][0], simple_pred_pos[i][1], c='g', label='Simple Predicted Position')
-            plt.title('Input Low-Res Heatmap')
+            plt.imshow(
+                X_low_res[i], cmap="hot", interpolation="nearest", origin="lower", extent=[-2.5, 2.5, -2.5, 2.5]
+            )
+            plt.scatter(y_true_pos[i, 0], y_true_pos[i, 1], c="r", marker="x", label="True Position")
+            plt.scatter(y_pred_pos[i, 0], y_pred_pos[i, 1], c="b", label="Predicted Position")
+            plt.scatter(simple_pred_pos[i][0], simple_pred_pos[i][1], c="g", label="Simple Predicted Position")
+            plt.title("Input Low-Res Heatmap")
 
             # Plot predicted high-resolution heatmap
             plt.subplot(1, 3, 2)
-            plt.imshow(X_high_res_pred[i].reshape(original_shape[1:3]), cmap='hot', interpolation='nearest', origin='lower', extent=[-2.5, 2.5, -2.5, 2.5])
-            plt.scatter(y_true_pos[i, 0], y_true_pos[i, 1], c='r', marker='x', label='True Position')
-            plt.scatter(y_pred_pos[i, 0], y_pred_pos[i, 1], c='b', label='Predicted Position')
-            plt.scatter(simple_pred_pos[i][0], simple_pred_pos[i][1], c='g', label='Simple Predicted Position')
-            plt.title('Predicted High-Res Heatmap')
+            plt.imshow(
+                X_high_res_pred[i].reshape(original_shape[1:3]),
+                cmap="hot",
+                interpolation="nearest",
+                origin="lower",
+                extent=[-2.5, 2.5, -2.5, 2.5],
+            )
+            plt.scatter(y_true_pos[i, 0], y_true_pos[i, 1], c="r", marker="x", label="True Position")
+            plt.scatter(y_pred_pos[i, 0], y_pred_pos[i, 1], c="b", label="Predicted Position")
+            plt.scatter(simple_pred_pos[i][0], simple_pred_pos[i][1], c="g", label="Simple Predicted Position")
+            plt.title("Predicted High-Res Heatmap")
 
             # Plot true and predicted positions
             plt.subplot(1, 3, 3)
-            plt.imshow(X_high_res[i], cmap='hot', interpolation='nearest', origin='lower', extent=[-2.5, 2.5, -2.5, 2.5])
-            plt.scatter(y_true_pos[i, 0], y_true_pos[i, 1], c='r', marker='x', label='True Position')
-            plt.scatter(y_pred_pos[i, 0], y_pred_pos[i, 1], c='b', label='Predicted Position')
-            plt.scatter(simple_pred_pos[i][0], simple_pred_pos[i][1], c='g', label='Simple Predicted Position')
+            plt.imshow(
+                X_high_res[i], cmap="hot", interpolation="nearest", origin="lower", extent=[-2.5, 2.5, -2.5, 2.5]
+            )
+            plt.scatter(y_true_pos[i, 0], y_true_pos[i, 1], c="r", marker="x", label="True Position")
+            plt.scatter(y_pred_pos[i, 0], y_pred_pos[i, 1], c="b", label="Predicted Position")
+            plt.scatter(simple_pred_pos[i][0], simple_pred_pos[i][1], c="g", label="Simple Predicted Position")
             plt.legend()
-            plt.title('True Heatmap')
+            plt.title("True Heatmap")
 
             plt.show()
 
@@ -214,25 +233,26 @@ class SuperResolutionModel:
         plt.figure(figsize=(12, 6))
 
         plt.subplot(1, 2, 1)
-        plt.scatter(true_x, predicted_x, c='b', label='Predicted vs. True x')
-        plt.xlabel('True x-coordinate')
-        plt.ylabel('Predicted x-coordinate')
-        plt.title('Predicted x vs. True x')
+        plt.scatter(true_x, predicted_x, c="b", label="Predicted vs. True x")
+        plt.xlabel("True x-coordinate")
+        plt.ylabel("Predicted x-coordinate")
+        plt.title("Predicted x vs. True x")
         plt.grid(True)
-        plt.legend() 
+        plt.legend()
 
         plt.subplot(1, 2, 2)
-        plt.scatter(true_y, predicted_y, c='b', label='Predicted vs. True y')
-        plt.xlabel('True y-coordinate')
-        plt.ylabel('Predicted y-coordinate')
-        plt.title('Predicted y vs. True y')
+        plt.scatter(true_y, predicted_y, c="b", label="Predicted vs. True y")
+        plt.xlabel("True y-coordinate")
+        plt.ylabel("Predicted y-coordinate")
+        plt.title("Predicted y vs. True y")
         plt.grid(True)
         plt.legend()
 
         plt.show()
 
+
 def create_datasets(X_low_res, X_high_res, y_true_pos, train_fraction=0.8):
-    n_train = int(train_fraction*len(X_low_res))
+    n_train = int(train_fraction * len(X_low_res))
 
     X_train = np.asarray(X_low_res[:n_train])
     y_train = np.asarray(X_high_res[:n_train])

@@ -2,6 +2,7 @@ import numpy as np
 import scipy.interpolate
 import scipy.ndimage
 
+
 def reshape_data(X):
     """
     Reshape the data to be compatible with the model.
@@ -14,11 +15,12 @@ def reshape_data(X):
     X_flat = X.reshape(X.shape[0], -1)
     return X_flat
 
-def congrid(a, newdims, method='linear', centre=False, minusone=False):
-    '''Arbitrary resampling of source array to new dimension sizes.
+
+def congrid(a, newdims, method="linear", centre=False, minusone=False):
+    """Arbitrary resampling of source array to new dimension sizes.
     Currently only supports maintaining the same number of dimensions.
     To use 1-D arrays, first promote them to shape (x,1).
-    
+
     Uses the same parameters and creates the same co-ordinate lookup points
     as IDL's congrid routine, which apparently originally came from a VAX/VMS
     routine of the same name.
@@ -39,7 +41,7 @@ def congrid(a, newdims, method='linear', centre=False, minusone=False):
     False - inarray is resampled by factors of (i/x) * (j/y)
     True - inarray is resampled by(i-1)/(x-1) * (j-1)/(y-1)
     This prevents extrapolation one element beyond bounds of input array.
-    '''
+    """
     if not a.dtype in [float]:
         a = np.cast[float](a)
 
@@ -48,28 +50,28 @@ def congrid(a, newdims, method='linear', centre=False, minusone=False):
     old = np.array(a.shape)
     ndims = len(a.shape)
     if len(newdims) != ndims:
-        print("[congrid] dimensions error. "
-              "This routine currently only supports "
-              "rebinning to the same number of dimensions.")
+        print(
+            "[congrid] dimensions error. "
+            "This routine currently only supports "
+            "rebinning to the same number of dimensions."
+        )
         return None
     newdims = np.asarray(newdims, dtype=float)
     dimlist = []
 
-    if method == 'neighbour':
+    if method == "neighbour":
         for i in range(ndims):
             base = np.indices(newdims)[i]
-            dimlist.append((old[i] - m1) / (newdims[i] - m1)
-                            * (base + ofs) - ofs)
+            dimlist.append((old[i] - m1) / (newdims[i] - m1) * (base + ofs) - ofs)
         cd = np.array(dimlist).round().astype(int)
         newa = a[tuple(cd)]
         return newa
 
-    elif method in ['nearest', 'linear']:
+    elif method in ["nearest", "linear"]:
         # calculate new dims
         for i in range(ndims):
             base = np.arange(newdims[i])
-            dimlist.append((old[i] - m1) / (newdims[i] - m1)
-                            * (base + ofs) - ofs)
+            dimlist.append((old[i] - m1) / (newdims[i] - m1) * (base + ofs) - ofs)
         # specify old dims
         olddims = [np.arange(i, dtype=float) for i in list(a.shape)]
 
@@ -89,7 +91,7 @@ def congrid(a, newdims, method='linear', centre=False, minusone=False):
             newa = newa.transpose(trorder)
 
         return newa
-    elif method in ['spline']:
+    elif method in ["spline"]:
         oslices = [slice(0, j) for j in old]
         oldcoords = np.ogrid[oslices]
         nslices = [slice(0, j) for j in list(newdims)]
@@ -111,10 +113,13 @@ def congrid(a, newdims, method='linear', centre=False, minusone=False):
         newa = scipy.ndimage.map_coordinates(a, newcoords)
         return newa
     else:
-        print("Congrid error: Unrecognized interpolation type.\n",
-              "Currently only 'neighbour', 'nearest', 'linear',",
-              "and 'spline' are supported.")
+        print(
+            "Congrid error: Unrecognized interpolation type.\n",
+            "Currently only 'neighbour', 'nearest', 'linear',",
+            "and 'spline' are supported.",
+        )
         return None
+
 
 def downsample_heatmaps_to_dimensions(heatmaps, new_height, new_width):
     """
@@ -132,11 +137,10 @@ def downsample_heatmaps_to_dimensions(heatmaps, new_height, new_width):
 
     for heatmap in heatmaps:
         # Get the dimensions of the original heatmap
-        reshaped_heatmap = congrid(heatmap, (new_height, new_width), method='linear', centre=True, minusone=False)
+        reshaped_heatmap = congrid(heatmap, (new_height, new_width), method="linear", centre=True, minusone=False)
         downsampled_heatmaps.append(reshaped_heatmap)
 
     return np.asarray(downsampled_heatmaps)
-
 
 
 def weighted_average_estimator(X, r):
@@ -149,9 +153,10 @@ def weighted_average_estimator(X, r):
     Returns:
         list of tuple of float: The estimated positions.
     """
-    x = (-r*X[:,0,0] + r*X[:,0,1] - r*X[:,1,0] + r*X[:,1,1])/np.sum(X, axis=(1,2))
-    y =(-r*X[:,0,0] - r*X[:,0,1] + r*X[:,1,0]+ r*X[:,1,1])/np.sum(X, axis=(1,2))
-    return list(zip(x,y))
+    x = (-r * X[:, 0, 0] + r * X[:, 0, 1] - r * X[:, 1, 0] + r * X[:, 1, 1]) / np.sum(X, axis=(1, 2))
+    y = (-r * X[:, 0, 0] - r * X[:, 0, 1] + r * X[:, 1, 0] + r * X[:, 1, 1]) / np.sum(X, axis=(1, 2))
+    return list(zip(x, y))
+
 
 def mse(true, pred):
     """
@@ -164,7 +169,8 @@ def mse(true, pred):
     Returns:
         float: The mean squared error.
     """
-    return np.mean((np.asarray(true) - np.asarray(pred))**2)
+    return np.mean((np.asarray(true) - np.asarray(pred)) ** 2)
+
 
 def r_squared(true, pred):
     """
@@ -177,4 +183,4 @@ def r_squared(true, pred):
     Returns:
         float: The R^2.
     """
-    return 1 - np.sum((np.asarray(true) - np.asarray(pred))**2)/np.sum((np.asarray(true) - np.mean(true))**2)
+    return 1 - np.sum((np.asarray(true) - np.asarray(pred)) ** 2) / np.sum((np.asarray(true) - np.mean(true)) ** 2)

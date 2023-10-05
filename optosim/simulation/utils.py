@@ -1,4 +1,4 @@
-import numpy as np  
+import numpy as np
 from numba import njit
 
 """
@@ -11,6 +11,7 @@ Functions:
     rotation_matrix_from_z_to_n: Calculates the rotation matrix to rotate the z-axis onto the vector n
 
 """
+
 
 @njit
 def calculate_position(x, t, s):
@@ -26,9 +27,10 @@ def calculate_position(x, t, s):
     """
     return (x[0] + s * t[0], x[1] + s * t[1], x[2] + s * t[2])
 
+
 @njit
 def intersection_with_cylinder_old(x, t, R, zb, zt):
-    """Finds intersection of straight line photon trajectory with cylinder. Only intersections 
+    """Finds intersection of straight line photon trajectory with cylinder. Only intersections
     in the direction of the photon are considered.
 
     Args:
@@ -49,33 +51,33 @@ def intersection_with_cylinder_old(x, t, R, zb, zt):
     # Calculate the intersection points with the horizontal planes
     if abs(t[2]) > margin:  # Check if the photon is not parallel to the bottom plane
         t_bottom_plane = (zb - x[2]) / t[2]
-        if t_bottom_plane >= 0.:
+        if t_bottom_plane >= 0.0:
             s.append(t_bottom_plane)
             surface.append("bottom")
 
         # Calculate the intersection points with the top horizontal plane
         t_top_plane = (zt - x[2]) / t[2]
-        if t_top_plane >= 0.:
+        if t_top_plane >= 0.0:
             s.append(t_top_plane)
             surface.append("top")
 
     # Calculate coefficients for the quadratic equation for the cylinder shell
-    A = t[0]**2 + t[1]**2
+    A = t[0] ** 2 + t[1] ** 2
     B = 2 * (x[0] * t[0] + x[1] * t[1])
-    C = x[0]**2 + x[1]**2 - R**2
+    C = x[0] ** 2 + x[1] ** 2 - R**2
 
     # Calculate the discriminant
     discriminant = B**2 - 4 * A * C
 
     # Check if there are real solutions for the cylinder shell
-    if discriminant >= 0.:
+    if discriminant >= 0.0:
         # Calculate the solutions for t
         t1 = (-B + np.sqrt(discriminant)) / (2 * A)
-        if t1 > 0.:
+        if t1 > 0.0:
             s.append(t1)
             surface.append("cylinder")
         t2 = (-B - np.sqrt(discriminant)) / (2 * A)
-        if t2 > 0.:
+        if t2 > 0.0:
             s.append(t2)
             surface.append("cylinder")
 
@@ -83,7 +85,7 @@ def intersection_with_cylinder_old(x, t, R, zb, zt):
     # Only find the intersection point furthest away from the start point. In this way we avoid selecting teh intersection point close to teh starting point
     # of the photon trajectory is found due to numerical imprecision. This is an isue if teh photon starts on the boundary of a volume.
     #
-    path_length = -100.
+    path_length = -100.0
     intersection_point = None
 
     # we calculate the normal vector to the surface at the intersection point (the normal vector points inward)
@@ -94,19 +96,18 @@ def intersection_with_cylinder_old(x, t, R, zb, zt):
         point = calculate_position(x, t, s_i)
         # Check if the intersection point is within the cylinder
         # if (zb - margin <= point[2] <= zt +margin) and (point[2] - x[2]) / t[2] >= 0. and  (np.sqrt(point[0]**2 + point[1]**2) <= R + margin):
-        if (zb - margin <= point[2] <= zt +margin) and (np.sqrt(point[0]**2 + point[1]**2) <= R + margin):
-
+        if (zb - margin <= point[2] <= zt + margin) and (np.sqrt(point[0] ** 2 + point[1] ** 2) <= R + margin):
             # Check if the intersection point is further away from the start point than the previous intersection point
             if s_i > path_length:
-                intersection_point = point 
+                intersection_point = point
                 path_length = s_i
                 if surface[s.index(s_i)] == "bottom":
-                    normal_vec = np.array([0., 0.,  1.])
+                    normal_vec = np.array([0.0, 0.0, 1.0])
                 elif surface[s.index(s_i)] == "top":
-                    normal_vec = np.array([0., 0., -1.])
+                    normal_vec = np.array([0.0, 0.0, -1.0])
                 else:
-                    len = np.sqrt(point[0]**2 + point[1]**2)
-                    normal_vec = np.array([-point[0] / len, -point[1] / len, 0.])                        
+                    len = np.sqrt(point[0] ** 2 + point[1] ** 2)
+                    normal_vec = np.array([-point[0] / len, -point[1] / len, 0.0])
 
     if intersection_point == None:
         print("No intersection points found")
@@ -114,11 +115,13 @@ def intersection_with_cylinder_old(x, t, R, zb, zt):
 
     return intersection_point, path_length, normal_vec
 
+
 MARGIN = 1e-6
+
 
 @njit
 def intersection_with_cylinder(x, t, R, zb, zt):
-    """Finds intersection of straight line photon trajectory with cylinder. Only intersections 
+    """Finds intersection of straight line photon trajectory with cylinder. Only intersections
     in the direction of the photon are considered.
 
     Args:
@@ -130,40 +133,40 @@ def intersection_with_cylinder(x, t, R, zb, zt):
 
     Returns:
         array, float, array: intersection point, path length, normal vector
-    """ 
-    
+    """
+
     def calculate_intersection_plane(axis_val, t_val, plane_val):
         if abs(t_val) > MARGIN:
             return (plane_val - axis_val) / t_val
         return -1.0
-    
+
     def calculate_position(start, direction, distance):
         return start + direction * distance
 
     # Check intersection with bottom and top planes
     t_bottom_plane = calculate_intersection_plane(x[2], t[2], zb)
     t_top_plane = calculate_intersection_plane(x[2], t[2], zt)
-    
+
     # Calculate coefficients for the quadratic equation for the cylinder shell
-    A = t[0]**2 + t[1]**2
+    A = t[0] ** 2 + t[1] ** 2
     B = 2 * (x[0] * t[0] + x[1] * t[1])
-    C = x[0]**2 + x[1]**2 - R**2
+    C = x[0] ** 2 + x[1] ** 2 - R**2
 
     # Calculate the discriminant
     discriminant = B**2 - 4 * A * C
     t1, t2 = -1.0, -1.0
-    if discriminant >= 0.:
+    if discriminant >= 0.0:
         t1 = (-B + np.sqrt(discriminant)) / (2 * A)
         t2 = (-B - np.sqrt(discriminant)) / (2 * A)
-    
+
     # Find the intersection point with the cylinder shell and a positve path length
     possible_ts = [t_val for t_val in [t_bottom_plane, t_top_plane, t1, t2] if t_val > 0.0]
-    
+
     # Initialize the intersection point, path length and normal vector
     intersection_point = np.zeros(3)
-    max_path_length = -100.
+    max_path_length = -100.0
     normal_vec = np.zeros(3)
-    
+
     # Find the intersection point with the largest path length
     for t_val in possible_ts:
         # Calculate the intersection point
@@ -177,14 +180,14 @@ def intersection_with_cylinder(x, t, R, zb, zt):
                 # detrmine whch surface the intersection point is on
                 if t_val == t_bottom_plane:
                     # bottom plane. normal vector points up
-                    normal_vec = np.array([0., 0.,  1.])
+                    normal_vec = np.array([0.0, 0.0, 1.0])
                 elif t_val == t_top_plane:
                     # top plane. normal vector points down
-                    normal_vec = np.array([0., 0., -1.])
+                    normal_vec = np.array([0.0, 0.0, -1.0])
                 else:
                     # cylinder shell. normal vector points radially inward
                     len_point = np.linalg.norm(point[:2])
-                    normal_vec = np.array([-point[0] / len_point, -point[1] / len_point, 0.])
+                    normal_vec = np.array([-point[0] / len_point, -point[1] / len_point, 0.0])
 
     return intersection_point, max_path_length, normal_vec
 
@@ -208,7 +211,7 @@ def generate_lambertian(n):
     phi = 2 * np.pi * np.random.rand()
 
     # Generate a random cos(theta) value following Lambert's cosine law
-    theta = np.arcsin(np.random.uniform(0., 1.0)) 
+    theta = np.arcsin(np.random.uniform(0.0, 1.0))
     cos_theta = np.cos(theta)
 
     # Calculate the new unit vector based on spherical coordinates
@@ -224,6 +227,7 @@ def generate_lambertian(n):
     new_unit_vector = np.dot(rotation_matrix, np.array([x, y, z]))
 
     return new_unit_vector
+
 
 @njit
 def rotation_matrix_from_z_to_n(n):
@@ -252,9 +256,13 @@ def rotation_matrix_from_z_to_n(n):
     sin_angle = np.sin(rotation_angle)
     cos_angle = np.cos(rotation_angle)
 
-    K = np.array([[0.0, -rotation_axis[2], rotation_axis[1]],
-                  [rotation_axis[2], 0.0, -rotation_axis[0]],
-                  [-rotation_axis[1], rotation_axis[0], 0.0]])
+    K = np.array(
+        [
+            [0.0, -rotation_axis[2], rotation_axis[1]],
+            [rotation_axis[2], 0.0, -rotation_axis[0]],
+            [-rotation_axis[1], rotation_axis[0], 0.0],
+        ]
+    )
 
     rotation_matrix = np.eye(3) + sin_angle * K + (1.0 - cos_angle) * np.dot(K, K)
 
