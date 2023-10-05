@@ -85,8 +85,5 @@ If you would like to contribute to this project, please follow these guidelines:
 - Run the tests using pytest.
 - Submit a pull request.
 
-## License
-
-[MIT](https://choosealicense.com/licenses/mit/)
 
 
