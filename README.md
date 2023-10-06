@@ -28,6 +28,11 @@ or preferably using the setup.sh script, that creates a virtual environment and 
 source setup.sh
 ```
 
+Activate the virtual environment that was created:
+```bash
+source venv_optosim/bin/activate
+```
+
 ## Structure
 
 The OptoSim package contains two main modules: simulation and super_resolution. The simulation module contains the classes and functions for simulating the propagation of light through a scintillator material and the subsequent detection of the scintillation light by a photodetector in the TPC. The super_resolution module contains the classes and functions for reconstructing the position of the scintillation event from the detected light using machine learning models, including super_resolution models trained with the information of the optical simulation with a fine grid.
@@ -43,7 +48,7 @@ First, make sure that the paths specified in the settings.ini file are the desir
 To run a simulation, move to the optosim directory and do:
 
 ```bash
-python run_simulation.py --run_id mc0001 --job_id 0 --config config_example.json 
+python simulation_run.py --run_id mc0001 --job_id 0 --config config_example.json 
 ```
 
 this will run one batch (job_id=0) of the simulation for run mc0001, using the configuration file config_example.json in the config folder. The ouptup of the simulation will be stored in the output folder specified in the settings.ini file.
