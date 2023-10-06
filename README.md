@@ -43,7 +43,7 @@ First, make sure that the paths specified in the settings.ini file are the desir
 To run a simulation, move to the optosim directory and do:
 
 ```bash
-python run_simulation.py --run_id mc0001 --job_id 0 --config config_example.json 
+python simulation_run.py --run_id mc0001 --job_id 0 --config config_example.json 
 ```
 
 this will run one batch (job_id=0) of the simulation for run mc0001, using the configuration file config_example.json in the config folder. The ouptup of the simulation will be stored in the output folder specified in the settings.ini file.
