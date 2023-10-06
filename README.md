@@ -28,6 +28,11 @@ or preferably using the setup.sh script, that creates a virtual environment and 
 source setup.sh
 ```
 
+Activate the virtual environment that was created:
+```bash
+source venv_optosim/bin/activate
+```
+
 ## Structure
 
 The OptoSim package contains two main modules: simulation and super_resolution. The simulation module contains the classes and functions for simulating the propagation of light through a scintillator material and the subsequent detection of the scintillation light by a photodetector in the TPC. The super_resolution module contains the classes and functions for reconstructing the position of the scintillation event from the detected light using machine learning models, including super_resolution models trained with the information of the optical simulation with a fine grid.
