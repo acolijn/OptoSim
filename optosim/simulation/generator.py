@@ -69,7 +69,7 @@ class Generator:
         """
 
         # Read configuration file
-        self.config_file = os.path.join(CONFIG_DIR, config_file)
+        self.config_file = os.path.join(CONFIG_DIR, config)
 
         if os.path.isfile(self.config_file):
             print("Generator::Reading configuration from file: {}".format(self.config_file))
