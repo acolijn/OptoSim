@@ -7,7 +7,7 @@ def parse_args():
     parser = argparse.ArgumentParser()
     parser.add_argument("--config", help="Configuration file", default="config_example.json")
     parser.add_argument("--run_id", help="Run ID", required=True)
-    parser.add_argument("--njobs", help="Number of jobs", default=10)
+    parser.add_argument("--njobs", help="Number of jobs", default=10, type=int)
     args = parser.parse_args()
 
     return args

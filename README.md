@@ -56,7 +56,7 @@ this will run one batch (job_id=0) of the simulation for run mc0001, using the c
 To submit multiple jobs to the cluster, each processing a different batch of the simulation, do:
 
 ```bash
-python submit_simulation.py --run_id mc0001 --config config_example.json --n_jobs 10
+python simulation_submit.py --run_id mc0001 --config config_example.json --njobs 10
 ```
 
 this will submit 10 jobs to the cluster, each processing a different batch of the simulation for run mc0001, using the configuration file config_example.json in the config folder. The ouptup of the simulation will be stored in the data folder specified in the settings.ini file. The jobs will be submitted by default in the short queue on stoomboot. The job submission is handled by the batch_stbc.py module.  Note that in order to be able to submit jobs to the cluster, the setup.sh script must have been run before. Job submission will only work for users with access to the stoomboot cluster. 
