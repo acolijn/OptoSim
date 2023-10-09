@@ -8,6 +8,7 @@ def parse_args():
     parser.add_argument("--run_id", help="Run ID", required=True)
     parser.add_argument("--nmax", help="Maximum number of events to read", default=10_000_000)
     parser.add_argument("--mem_per_cpu", help="Memory per CPU", default=8000)
+    parser.add_argument("--queue", help="Queue", default="generic")
     parser.add_argument(
         "--pmts_per_dim",
         help="""
@@ -59,7 +60,7 @@ def main():
             log=log,
             jobname=jobname,
             mem_per_cpu=args.mem_per_cpu,
-            queue="generic",
+            queue=args.queue,
         )
 
         print(f"Submitted job with {i_pmts_per_dim}pmts for run {args.run_id}")
