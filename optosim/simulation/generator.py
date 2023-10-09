@@ -56,7 +56,7 @@ class Generator:
 
     """
 
-    def __init__(self, filename, config_file="config_example.json", **kwargs):
+    def __init__(self, filename, config, **kwargs):
         """Initializes the generator class. The configuration is read from the config file.
 
         Parameters
@@ -64,7 +64,7 @@ class Generator:
         filename : str
             Filename of output file. Needs to be an absolute path ending with .hd5f
         config : str
-            Filename of configuration file. Default is 'config_example.json'.
+            Filename of configuration file. For example: 'config_example.json'.
 
         """
 

@@ -5,6 +5,8 @@ import os
 
 def parse_args():
     parser = argparse.ArgumentParser()
+
+    # Arguments for the simulation
     parser.add_argument("--config", help="Configuration file", default="config_example.json")
     parser.add_argument("--run_id", help="Run ID", required=True)
     parser.add_argument("--njobs", help="Number of jobs", default=10, type=int)
