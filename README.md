@@ -43,6 +43,10 @@ The OptoSim package contains two main modules: simulation and super_resolution. 
 
 First, make sure that the paths specified in the settings.ini file are the desired ones. The settings.ini file contains the paths to the data, the output, the log files, the configuration files, etc.
 
+### Configuration
+
+TODO: need to add a description of the configuration file, how to create one, and what are the parameters that can be specified.
+
 ### Simulation
 
 To run a simulation, move to the optosim directory and do:
