@@ -5,21 +5,22 @@ import os
 
 def parse_args():
     parser = argparse.ArgumentParser(description="Train a neural network to do super resolution")
+
+    # Arguments for the model_train file
     parser.add_argument("--run_id", help="Run ID", required=True)
     parser.add_argument("--nmax", help="Maximum number of events to read", default=10_000_000)
-    parser.add_argument("--mem_per_cpu", help="Memory per CPU", default=8000)
-    parser.add_argument("--queue", help="Queue", default="generic")
-    parser.add_argument(
-        "--pmts_per_dim",
-        help="""
+    parser.add_argument("--pmts_per_dim",help="""
                         Number of PMTs per dimension. 
                         It allows to specify a list of values, e.g. --pmts_per_dim 5 10 15. 
                         One job will be submitted for each value.""",
-        nargs="*",
-        default=[
-            5,
-        ],
+                        nargs="*",
+                        default=[5,],
     )
+
+    # Arguments for the batch system
+    parser.add_argument("--mem_per_cpu", help="Memory per CPU", default=8000)
+    parser.add_argument("--queue", help="Queue", default="generic")
+
 
     args = parser.parse_args()
 
