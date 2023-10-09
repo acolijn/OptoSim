@@ -8,6 +8,11 @@ def parse_args():
     parser.add_argument("--config", help="Configuration file", default="config_example.json")
     parser.add_argument("--run_id", help="Run ID", required=True)
     parser.add_argument("--njobs", help="Number of jobs", default=10, type=int)
+
+    # Arguments for the batch system
+    parser.add_argument("--mem_per_cpu", help="Memory per CPU", default=4000)
+    parser.add_argument("--queue", help="Queue", default="short")
+
     args = parser.parse_args()
 
     return args
@@ -45,8 +50,8 @@ def main():
             jobstring,
             log=log,
             jobname=jobname,
-            mem_per_cpu=4000,
-            queue="short",
+            mem_per_cpu=args.mem_per_cpu,
+            queue=args.queue,
         )
 
         print(f"Submitted job {i} for run {args.run_id} with config {args.config}")
