@@ -24,7 +24,7 @@ def main():
     # Parse the command line arguments
     args = parse_args()
 
-    from optosim.settings import OPTOSIM_DIR, PROJECT_DIR, LOG_DIR
+    from optosim.settings import OPTOSIM_DIR, PROJECT_DIR, LOG_DIR, DATA_DIR
 
     run_mc_file = os.path.join(OPTOSIM_DIR, "simulation_run.py")
 
