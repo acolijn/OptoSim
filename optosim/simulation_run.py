@@ -46,7 +46,7 @@ def main():
         raise ValueError(f"File {filename} already exists. Something is wrong. Please check.")
 
     # initialize the generator
-    gen = optosim.simulation.generator.Generator(filename, config=config_file)
+    gen = optosim.simulation.generator.Generator(filename, config_file=config_file)
     print("Initialized generator.")
 
     # generate events

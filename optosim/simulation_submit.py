@@ -31,9 +31,10 @@ def main():
     # Check if the run ID already exists
     if os.path.exists(os.path.join(DATA_DIR,args.run_id)):
         raise ValueError(f"Run ID {args.run_id} already exists.")
-
+        
     # Submit the jobs
     for i in range(args.njobs):
+      
         # Make jobstring
         jobstring = f"""
 
