@@ -44,7 +44,7 @@ def main():
     filename = os.path.join(run_id_dir, f"{run_id}.{job_id:04}.hd5f")
 
     # initialize the generator
-    gen = optosim.simulation.generator.Generator(filename, config=config_file)
+    gen = optosim.simulation.generator.Generator(filename, config_file=config_file)
     print("Initialized generator.")
 
     # generate events

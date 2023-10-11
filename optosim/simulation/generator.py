@@ -125,7 +125,6 @@ class Generator:
             else:
                 events_group = self.file["events"]
 
-
             self.events_dset["number"] = events_group.create_dataset("number", (total_events,), dtype=np.int32)
             self.events_dset["nphoton"] = events_group.create_dataset("nphoton", (total_events,), dtype=np.float32)
             self.events_dset["true_position"] = events_group.create_dataset("true_position", (total_events, 3), dtype=np.float32)
@@ -193,7 +192,6 @@ class Generator:
         else:
             nphoton = np.random.randint(nph_range[0], nph_range[1])
 
-        print(nphoton)
         # Loop over photons
         for _ in range(nphoton):
             # Generate photon at position x0
