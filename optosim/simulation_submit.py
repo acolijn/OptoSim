@@ -5,9 +5,16 @@ import os
 
 def parse_args():
     parser = argparse.ArgumentParser()
+
+    # Arguments for the simulation
     parser.add_argument("--config", help="Configuration file", default="config_example.json")
     parser.add_argument("--run_id", help="Run ID", required=True)
-    parser.add_argument("--njobs", help="Number of jobs", default=10)
+    parser.add_argument("--njobs", help="Number of jobs", default=10, type=int)
+
+    # Arguments for the batch system
+    parser.add_argument("--mem_per_cpu", help="Memory per CPU", default=4000)
+    parser.add_argument("--queue", help="Queue", default="short")
+
     args = parser.parse_args()
 
     return args
@@ -17,14 +24,17 @@ def main():
     # Parse the command line arguments
     args = parse_args()
 
-    from optosim.settings import OPTOSIM_DIR, PROJECT_DIR, LOG_DIR
+    from optosim.settings import OPTOSIM_DIR, PROJECT_DIR, LOG_DIR, DATA_DIR
 
     run_mc_file = os.path.join(OPTOSIM_DIR, "simulation_run.py")
 
-    print(args.njobs)
-
+    # Check if the run ID already exists
+    if os.path.exists(os.path.join(DATA_DIR,args.run_id)):
+        raise ValueError(f"Run ID {args.run_id} already exists.")
+        
     # Submit the jobs
-    for i in range(int(args.njobs)):
+    for i in range(args.njobs):
+      
         # Make jobstring
         jobstring = f"""
 
@@ -48,8 +58,8 @@ def main():
             jobstring,
             log=log,
             jobname=jobname,
-            mem_per_cpu=4000,
-            queue="short",
+            mem_per_cpu=args.mem_per_cpu,
+            queue=args.queue,
         )
 
         print(f"Submitted job {i} for run {args.run_id} with config {args.config}")
