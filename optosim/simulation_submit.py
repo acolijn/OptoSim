@@ -21,7 +21,10 @@ def main():
 
     run_mc_file = os.path.join(OPTOSIM_DIR, "simulation_run.py")
 
-    for i in range(args.njobs):
+    print(args.njobs)
+
+    # Submit the jobs
+    for i in range(int(args.njobs)):
         # Make jobstring
         jobstring = f"""
 

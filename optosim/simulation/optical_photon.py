@@ -619,3 +619,4 @@ class OpticalPhoton:
         """
         print("x =", self.x, "t =", self.t, "medium =", self.current_medium)
         return 0
+
