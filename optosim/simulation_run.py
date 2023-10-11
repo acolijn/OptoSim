@@ -38,10 +38,12 @@ def main():
 
     if not os.path.exists(run_id_dir):
         os.makedirs(run_id_dir)
-    else:
-        raise ValueError(f"Run ID {run_id} already exists. Please use another run_id.")
 
     filename = os.path.join(run_id_dir, f"{run_id}.{job_id:04}.hd5f")
+
+    # If filename already exists, raise an error
+    if os.path.exists(filename):
+        raise ValueError(f"File {filename} already exists. Something is wrong. Please check.")
 
     # initialize the generator
     gen = optosim.simulation.generator.Generator(filename, config_file=config_file)

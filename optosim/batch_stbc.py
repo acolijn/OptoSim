@@ -34,11 +34,13 @@ sbatch_template = """#!/bin/bash
 #PBS -l pmem={mem_per_cpu}
 #PBS -q {queue}
 
-echo "starting script!"
+echo "Starting script!"
+echo `date`
 
 {job}
 
 echo "Script complete, bye!"
+echo `date`
 
 """
 

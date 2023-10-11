@@ -1,0 +1,23 @@
+{
+    "detector": "XENONnT",
+    "nevents": 10000,
+    "nphoton_per_event": [1000, 25000],
+    "photon_zgen": 0.1,
+    "geometry": {
+        "type": "cylinder",
+        "radius": 65.0,
+        "ztop": 7.0,
+        "zliq": 0.0,
+        "zbot": -150.0,
+        "ptfe_zmin": -9999.0,
+        "ptfe_zmax": 9999.0
+    },
+    "npmt_xy": 20,
+    "pmt":{
+        "type": "square",
+        "size": 10,
+        "ndivs": 5
+    },
+    "set_no_scatter": false,
+    "set_experimental_scatter_model": true
+}
