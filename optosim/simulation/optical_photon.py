@@ -441,11 +441,21 @@ class OpticalPhoton:
             # transmitted
             # print("transmitted")
             # 6. calculate the transmitted direction
-            in_dir = self.t
-            dot_product = np.dot(-in_dir, nvec)
-            refracted_dir = (n1 / n2) * (in_dir + dot_product * nvec) - np.sqrt(
-                1.0 - (n1 / n2) ** 2 * (1.0 - dot_product**2)
-            ) * nvec
+            refracted_dir = self.t
+
+            # if we enter the VOID medium, we should keep the photon direction the same
+            if medium2 != VOID:
+                in_dir = self.t
+                dot_product = np.dot(-in_dir, nvec)
+                discriminant = 1.0 - (n1 / n2) ** 2 * (1.0 - dot_product**2)
+                #refracted_dir = (n1 / n2) * (in_dir + dot_product * nvec) - np.sqrt(
+                #        1.0 - (n1 / n2) ** 2 * (1.0 - dot_product**2)
+                #) * nvec
+                if discriminant<0.0:
+                    print("error: discriminant < 0.0 value =", discriminant, n1, n2, R_average, rran, medium1, medium2)
+                    return 1
+                else:
+                    refracted_dir = (n1 / n2) * (in_dir + dot_product * nvec) - np.sqrt(discriminant) * nvec
 
             self.t = refracted_dir
             self.x = xint

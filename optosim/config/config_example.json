@@ -1,6 +1,6 @@
 {
     "detector": "XAMS",
-    "nevents": 10,
+    "nevents": 1,
     "nphoton_per_event": [1000, 25000],
     "photon_zgen": 0.1,
     "geometry":{
