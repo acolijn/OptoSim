@@ -54,8 +54,13 @@ def main():
 
         """
 
-        # Submit the job
-        log = os.path.join(LOG_DIR, f"job_train_{args.run_id}_{i_pmts_per_dim}pmt.log")
+        # Make logdir for this runid if it does not exist
+        logdir = os.path.join(LOG_DIR, args.run_id)
+        if not os.path.exists(logdir):
+            os.makedirs(logdir)
+
+        # Make log and jobname
+        log = os.path.join(logdir, f"job_train_{args.run_id}_{i_pmts_per_dim}pmt.log")
         jobname = f"optosim_train_{args.run_id}_{i_pmts_per_dim}pmt"
 
         # Submit the job

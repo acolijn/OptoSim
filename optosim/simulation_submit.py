@@ -29,12 +29,11 @@ def main():
     run_mc_file = os.path.join(OPTOSIM_DIR, "simulation_run.py")
 
     # Check if the run ID already exists
-    if os.path.exists(os.path.join(DATA_DIR,args.run_id)):
+    if os.path.exists(os.path.join(DATA_DIR, args.run_id)):
         raise ValueError(f"Run ID {args.run_id} already exists.")
-        
+
     # Submit the jobs
     for i in range(args.njobs):
-      
         # Make jobstring
         jobstring = f"""
 
@@ -50,8 +49,14 @@ def main():
 
         """
 
-        log = os.path.join(LOG_DIR, f"job_sim_{args.run_id}_{i}.log")
-        jobname = f"optosim_{args.run_id}_{i:04}"
+        # Make logdir for this runid if it does not exist
+        logdir = os.path.join(LOG_DIR, args.run_id)
+        if not os.path.exists(logdir):
+            os.makedirs(logdir)
+
+        # Make log and jobname
+        log = os.path.join(logdir, f"job_sim_{args.run_id}_{i}.log")
+        jobname = f"sim_{args.run_id}_{i:04}"
 
         # Submit the job
         submit_job(
