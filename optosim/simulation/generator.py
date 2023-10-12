@@ -5,7 +5,7 @@ import h5py
 
 import optosim
 
-from optosim.settings import DATA_DIR, OPTOSIM_DIR, CONFIG_DIR
+from optosim.settings import DATA_DIR, OPTOSIM_DIR, CONFIG_DIR, DATA_TYPE_VERSION
 import optosim.simulation.optical_photon as op
 
 
@@ -39,7 +39,11 @@ class Generator:
             }
         }
 
-    2. The per event data is stored in a dictionary with the following structure:
+    2. Data structure.
+    
+    If DATA_TYPE_VERSION = 1.0
+    
+    The per event data is stored in a dictionary with the following structure:
         {
             'number': event number,
             'nphoton': number of photons generated in event,
@@ -54,6 +58,8 @@ class Generator:
                 photons deteccted in the 'real' detector bottom.
         }
 
+    If DATA_TYPE_VERSION = 2.0
+        TO BE IMPLEMENTED
     """
 
     def __init__(self, filename, config, **kwargs):
@@ -94,6 +100,41 @@ class Generator:
 
         # define an optical photon
         self.aPhoton = op.OpticalPhoton(config=self.config_file)
+
+        print("Generator::Initialized generator.")
+        print("Generator::Filename: {}".format(self.filename))	
+        print("Generator::Data type version: {}".format(DATA_TYPE_VERSION))
+
+
+    def initialize_file(self):
+        """Initializes the file for writing events to."""
+
+        if DATA_TYPE_VERSION == 1.0:
+            # inefficient data structure that we started teh project with
+            print("Using data type version 1.0")
+        elif DATA_TYPE_VERSION == 2.0:
+            # more efficient data structure
+            print("Using data type version 2.0")
+            total_events = self.config['nevents']
+            self.events_dset = {}
+
+             # Create 'events' group
+            events_group = {}
+            if "events" not in self.file:
+                events_group = self.file.create_group("events")
+            else:
+                events_group = self.file["events"]
+
+            self.events_dset["number"] = events_group.create_dataset("number", (total_events,), dtype=np.int32)
+            self.events_dset["nphoton"] = events_group.create_dataset("nphoton", (total_events,), dtype=np.float32)
+            self.events_dset["true_position"] = events_group.create_dataset("true_position", (total_events, 3), dtype=np.float32)
+            self.events_dset["fine_top"] = events_group.create_dataset("fine_top", (total_events, self.config["npmt_xy"]*self.config["pmt"]["ndivs"], self.config["npmt_xy"]*self.config["pmt"]["ndivs"]), dtype=np.int32) 
+            self.events_dset["pmt_top"] = events_group.create_dataset("pmt_top", (total_events, self.config["npmt_xy"], self.config["npmt_xy"]), dtype=np.int32)
+            self.events_dset["fine_bot"] = events_group.create_dataset("fine_bot", (total_events, self.config["npmt_xy"]*self.config["pmt"]["ndivs"], self.config["npmt_xy"]*self.config["pmt"]["ndivs"]), dtype=np.int32) 
+            self.events_dset["pmt_bot"] = events_group.create_dataset("pmt_bot", (total_events, self.config["npmt_xy"], self.config["npmt_xy"]), dtype=np.int32)
+        else:
+            print("WTF")
+            raise ValueError("Unknown data type version: {}".format(DATA_TYPE_VERSION)) 
 
     def generate_event(self):
         """Generates a single event.
@@ -151,7 +192,6 @@ class Generator:
         else:
             nphoton = np.random.randint(nph_range[0], nph_range[1])
 
-        print(nphoton)
         # Loop over photons
         for _ in range(nphoton):
             # Generate photon at position x0
@@ -214,7 +254,9 @@ class Generator:
         """Generates a batch of events."""
 
         batch_size = self.config["nevents"]
-        self.open_file(self.filename)  # Open file for writing events to
+        # Open file
+        self.open_file(self.filename)
+        self.initialize_file()
 
         for i in range(batch_size):
             if i % 10 == 0:
@@ -249,12 +291,26 @@ class Generator:
         """Writes an event to the file."""
 
         # Create group for event
-        ev = "event_{}".format(self.ievent)
-        event_group = self.event_group.create_group(ev)
+        if DATA_TYPE_VERSION == 1.0:
+            ev = "event_{}".format(self.ievent)
+            event_group = self.event_group.create_group(ev)
 
-        # Write event data
-        for key in event.keys():
-            event_group[key] = event[key]
+            # Write event data
+            for key in event.keys():
+                event_group[key] = event[key]
+        elif DATA_TYPE_VERSION == 2.0:
+            idx = self.ievent  # Assume you have initialized this to 0 and update it every time you write an event
+    
+            self.events_dset["number"][idx] = event["number"]
+            self.events_dset["nphoton"][idx] = event["nphoton"]
+            self.events_dset["true_position"][idx] = event["true_position"]
+            self.events_dset["fine_top"][idx] = event["fine_top"]
+            self.events_dset["pmt_top"][idx] = event["pmt_top"] 
+            self.events_dset["fine_bot"][idx] = event["fine_bot"]   
+            self.events_dset["pmt_bot"][idx] = event["pmt_bot"]
+
+        else:
+            raise ValueError("Unknown data type version: {}".format(DATA_TYPE_VERSION))
 
         return 0
 
