@@ -39,7 +39,7 @@ def main():
     if not os.path.exists(run_id_dir):
         os.makedirs(run_id_dir)
 
-    filename = os.path.join(run_id_dir, f"{run_id}.{job_id:04}.hd5")
+    filename = os.path.join(run_id_dir, f"{run_id}.{job_id:04}.hdf5")
 
     # If filename already exists, raise an error
     if os.path.exists(filename):
