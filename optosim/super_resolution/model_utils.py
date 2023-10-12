@@ -158,6 +158,7 @@ def weighted_average_estimator(X, r):
     """
     x = (-r * X[:, 0, 0] + r * X[:, 0, 1] - r * X[:, 1, 0] + r * X[:, 1, 1]) / np.sum(X, axis=(1, 2))
     y = (-r * X[:, 0, 0] - r * X[:, 0, 1] + r * X[:, 1, 0] + r * X[:, 1, 1]) / np.sum(X, axis=(1, 2))
+
     return list(zip(x, y))
 
 
