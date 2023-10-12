@@ -85,8 +85,8 @@ class Generator:
             raise ValueError("Config file does not exist. {}".format(self.config_file))
 
         # Check filename extension
-        if not filename.endswith(".hd5"):
-            raise ValueError("Filename needs to end with .hd5")
+        if not filename.endswith(".hdf5"):
+            raise ValueError("Filename needs to end with .hdf5")
 
         # Check if the path is not a relative path
         if not os.path.isabs(filename):

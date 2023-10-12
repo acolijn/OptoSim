@@ -448,7 +448,7 @@ def show_data(data_dir):
     for subdir in subdirs:
         # Get list of files in subdirectory
         subdir_path = os.path.join(data_dir, subdir)
-        hd5_files = sorted([f for f in os.listdir(subdir_path) if (f.endswith(".hd5") or f.endswith(".hd5f"))])
+        hd5_files = sorted([f for f in os.listdir(subdir_path) if (f.endswith(".hdf5") or f.endswith(".hd5f"))])
 
         # Loop over files in subdirectory
         if hd5_files:
