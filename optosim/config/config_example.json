@@ -1,8 +1,8 @@
 {
     "detector": "XAMS",
-    "nevents": 1,
-    "nphoton_per_event": [1000, 25000],
-    "photon_zgen": 0.1,
+    "nevents": 10,
+    "nphoton_per_event": [100, 100000],
+    "photon_zgen": 0.5,
     "geometry":{
         "type": "cylinder",
         "radius": 3.2,
@@ -17,5 +17,7 @@
         "type": "square",
         "size": 2.54,
         "ndivs": 10
-    }
+    },
+    "scatter": true,
+    "experimental_scatter_model": true
 }

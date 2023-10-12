@@ -145,27 +145,58 @@ class EventReader:
 
         A.P. Colijn
         """
-        while True:
-            # Check if it's time to load or switch to a new file
-            if self.file is None or self.event_index >= len(self.event_names) - 1:
-                # Close current file if it exists
-                if self.file:
-                    self.file.close()
 
-                # Check if we're out of files to read from
-                if self.file_index >= len(self.filenames):
+        if self.config['data_type_version'] == 1.0:
+            while True:
+                # Check if it's time to load or switch to a new file
+                if self.file is None or self.event_index >= len(self.event_names) - 1:
+                    # Close current file if it exists
+                    if self.file:
+                        self.file.close()
+
+                    # Check if we're out of files to read from
+                    if self.file_index >= len(self.filenames):
+                        raise StopIteration
+
+                    # Open next file
+                    self.file = h5py.File(self.filenames[self.file_index], "r")
+                    self.file_index += 1
+                    self.event_names = list(self.file["events"].keys())
+                    self.event_index = -1
+
+                self.event_index += 1
+                event_dataset = self.file["events"][self.event_names[self.event_index]]
+                event_data = {key: event_dataset[key][()] for key in event_dataset.keys()}
+                return event_data
+            
+        elif self.config['data_type_version'] == 2.0:
+            # Check if we need to open a new file
+            if self.file is None:
+                # If we've never opened a file or have finished reading one, move to the next
+                if self.file_index >= self.nfiles:
                     raise StopIteration
-
-                # Open next file
+                # Open the next file
                 self.file = h5py.File(self.filenames[self.file_index], "r")
                 self.file_index += 1
-                self.event_names = list(self.file["events"].keys())
                 self.event_index = -1
 
+            # Move to the next event
             self.event_index += 1
-            event_dataset = self.file["events"][self.event_names[self.event_index]]
-            event_data = {key: event_dataset[key][()] for key in event_dataset.keys()}
+            event_group = self.file["events"]
+
+            # Check if we've read all events in this file
+            if self.event_index >= event_group["number"].shape[0]:
+                # Move to the next file and recurse
+                self.file.close()
+                self.file = None
+                return self.__next__()
+
+            # Extract data for the current event
+            event_data = {key: dataset[self.event_index] for key, dataset in event_group.items()}
             return event_data
+        else:
+            raise ValueError(f"Unsupported data type version: {self.config['data_type_version']}")
+
 
     def close(self):
         """Closes the file
@@ -417,7 +448,7 @@ def show_data(data_dir):
     for subdir in subdirs:
         # Get list of files in subdirectory
         subdir_path = os.path.join(data_dir, subdir)
-        hd5_files = sorted([f for f in os.listdir(subdir_path) if f.endswith(".hd5f")])
+        hd5_files = sorted([f for f in os.listdir(subdir_path) if (f.endswith(".hd5") or f.endswith(".hd5f"))])
 
         # Loop over files in subdirectory
         if hd5_files:
@@ -448,8 +479,8 @@ def show_data(data_dir):
         "detector",
         "nevents",
         "nphoton_per_event",
-        "set_no_scatter",
-        "set_experimental_scatter_model",
+        "scatter",
+        "experimental_scatter_model",
         "radius",
     ]
     # Filter the list to include only columns that exist in the DataFrame

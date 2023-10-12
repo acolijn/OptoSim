@@ -44,7 +44,7 @@ class OpticalPhoton:
         """
 
         # Read configuration file
-        self.config_file = kwargs.get("config", "config.json")
+        self.config_file = kwargs.get("config_file", "config.json")
         if os.path.isfile(self.config_file):
             print("OpticalPhoton::Reading configuration from file: {}".format(self.config_file))
             self.config = json.load(open(self.config_file, "r"))
@@ -80,18 +80,18 @@ class OpticalPhoton:
         self.detected = False
 
         # set the photon position
-        if "set_no_scatter" in self.config:
-            print("'set_no_scatter' set to {}".format(self.config["set_no_scatter"]))
-            self.no_scattering = self.config["set_no_scatter"]
+        if "scatter" in self.config:
+            print("'scatter' set to {}".format(self.config["scatter"]))
+            self.scattering = self.config["scatter"]
         else:
-            print("'set_no_scatter' not in config: setting to False")
-            self.no_scattering = False
+            print("'scatter' not in config: setting to True")
+            self.scattering = True
 
-        if "set_experimental_scatter_model" in self.config:
-            print("'set_experimental_scatter_model' set to {}".format(self.config["set_experimental_scatter_model"]))
-            self.experimental_scatter_model = self.config["set_experimental_scatter_model"]
+        if "experimental_scatter_model" in self.config:
+            print("'experimental_scatter_model' set to {}".format(self.config["experimental_scatter_model"]))
+            self.experimental_scatter_model = self.config["experimental_scatter_model"]
         else:
-            print("'set_experimental_scatter_model' not in config: setting to True")
+            print("'experimental_scatter_model' not in config: setting to True")
             self.experimental_scatter_model = True
 
     def set_random_seed(self, seed):
@@ -120,18 +120,18 @@ class OpticalPhoton:
         """
         self.experimental_scatter_model = experimental_scatter_model
 
-    def set_no_scattering(self, no_scattering):
+    def set_scattering(self, scattering):
         """
         Switch off scattering
 
         Parameters
         ----------
-        no_scattering(bool) : bool
-            Switch off scattering
+        scattering(bool) : bool
+            Switch on/off scattering
 
         A.P. Colijn
         """
-        self.no_scattering = no_scattering
+        self.scattering = scattering
 
     def set_photon_position(self, x):
         """
@@ -411,7 +411,7 @@ class OpticalPhoton:
         # 5. decide whether the photon is reflected or transmitted based on the reflected power
 
         ##print('x before scatter =', xint,'direction before scatter', self.t, 'medium before scatter', medium1, 'medium after scatter', medium2, 'r_average', R_average)
-        if self.no_scattering or (medium2 == VOID):
+        if (not self.scattering) or (medium2 == VOID):
             rran = 1.0  # force transmission
         else:
             rran = random.uniform(0, 1)

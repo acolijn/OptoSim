@@ -55,7 +55,7 @@ def main():
 
     # read data
     run_id_dir = os.path.join(DATA_DIR, run_id)
-    files = glob.glob(run_id_dir + "/*.hd5f")
+    files = glob.glob(run_id_dir + "/*.hdf5")
 
     print(f"Reading data from {run_id_dir}")
     print(f"Found {len(files)} files")
