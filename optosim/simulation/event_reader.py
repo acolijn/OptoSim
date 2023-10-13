@@ -146,7 +146,8 @@ class EventReader:
         A.P. Colijn
         """
 
-        if self.config['data_type_version'] == 1.0:
+        # or if the data type version is not a key in the config dict (i.e. it's an old file)
+        if self.config.get("data_type_version", 1.0) == 1.0:
             while True:
                 # Check if it's time to load or switch to a new file
                 if self.file is None or self.event_index >= len(self.event_names) - 1:
@@ -168,8 +169,8 @@ class EventReader:
                 event_dataset = self.file["events"][self.event_names[self.event_index]]
                 event_data = {key: event_dataset[key][()] for key in event_dataset.keys()}
                 return event_data
-            
-        elif self.config['data_type_version'] == 2.0:
+
+        elif self.config["data_type_version"] == 2.0:
             # Check if we need to open a new file
             if self.file is None:
                 # If we've never opened a file or have finished reading one, move to the next
@@ -196,7 +197,6 @@ class EventReader:
             return event_data
         else:
             raise ValueError(f"Unsupported data type version: {self.config['data_type_version']}")
-
 
     def close(self):
         """Closes the file
