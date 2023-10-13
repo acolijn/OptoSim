@@ -66,9 +66,7 @@ class EventReader:
         with h5py.File(filenames[0], 'r') as f:
             self.config = json.loads(f.attrs.get("config"))
 
-        print("huh config = ", self.config)        
-
-        if self.config['data_type_version'] == 1.0:
+        if self.config.get('data_type_version', 1.0) == 1.0:
             # throw an error that this version is obsolete
             raise ValueError("Data type version 1.0 is obsolete. Please use version 2.0")
 
@@ -134,80 +132,6 @@ class EventReader:
         """
         event = self.get_event(n)
         print(event)
-
-    # def show_event(self, n):
-    #     """Shows the event
-
-    #     Parameters
-    #     ----------
-    #     event : dict
-    #         The event to show
-
-    #     Returns
-    #     -------
-    #     None
-
-    #     A.P. Colijn
-    #     """
-
-    #     # get the event
-    #     event = self.get_event(n)
-
-    #     # Get the true position of the event
-    #     truth = np.array(event["true_position"])
-    #     # Get the size of the PMT array
-    #     dx = self.config["pmt"]["size"] * self.config["npmt_xy"] / 2
-    #     # Get the radius of the cylinder
-    #     radius = self.config["geometry"]["radius"]
-
-    #     # Create figure
-    #     fig, axs = plt.subplots(1, 2, figsize=(10, 4))
-
-    #     # Plot fine bin signal
-    #     fine = np.array(event["fine_top"])
-    #     im = axs[0].imshow(fine.T, cmap="viridis", interpolation="nearest", origin="lower", extent=[-dx, dx, -dx, dx])
-    #     plt.colorbar(im, ax=axs[0])
-    #     axs[0].plot(truth[0], truth[1], marker="o", markersize=10, color="red", label="Marker")
-    #     axs[0].set_xlabel("x (cm)")
-    #     axs[0].set_ylabel("y (cm)")
-    #     axs[0].set_xlim([-radius, radius])
-    #     axs[0].set_ylim([-radius, radius])
-    #     # Draw a circle with a specified radius
-    #     circle = Circle((0, 0), radius, color="blue", fill=False)
-    #     axs[0].add_patch(circle)
-    #     # Draw the outline of the PMTs
-    #     # Iterate through PMT positions and draw green boxes
-    #     pmt_size = self.config["pmt"]["size"]
-    #     for ix in range(self.config["npmt_xy"]):
-    #         for iy in range(self.config["npmt_xy"]):
-    #             x_pmt = ix * pmt_size - dx + pmt_size / 2
-    #             y_pmt = iy * pmt_size - dx + pmt_size / 2
-    #             pmt_box = Rectangle(
-    #                 (x_pmt - pmt_size / 2, y_pmt - pmt_size / 2), pmt_size, pmt_size, color="white", fill=False
-    #             )
-    #             axs[0].add_patch(pmt_box)
-
-    #     # Plot PMT signal
-    #     pmt = np.array(event["pmt_top"])
-    #     im = axs[1].imshow(pmt.T, cmap="viridis", interpolation="nearest", origin="lower", extent=[-dx, dx, -dx, dx])
-    #     plt.colorbar(im, ax=axs[1])
-    #     axs[1].plot(truth[0], truth[1], marker="o", markersize=10, color="red", label="Marker")
-    #     axs[1].set_xlabel("x (cm)")
-    #     axs[1].set_ylabel("y (cm)")
-    #     axs[1].set_xlim([-radius, radius])
-    #     axs[1].set_ylim([-radius, radius])
-    #     circle = Circle((0, 0), radius, color="blue", fill=False)
-    #     axs[1].add_patch(circle)
-    #     for ix in range(self.config["npmt_xy"]):
-    #         for iy in range(self.config["npmt_xy"]):
-    #             x_pmt = ix * pmt_size - dx + pmt_size / 2
-    #             y_pmt = iy * pmt_size - dx + pmt_size / 2
-    #             pmt_box = Rectangle(
-    #                 (x_pmt - pmt_size / 2, y_pmt - pmt_size / 2), pmt_size, pmt_size, color="white", fill=False
-    #             )
-    #             axs[1].add_patch(pmt_box)
-
-    #     plt.show()
 
     def show_event(self, n):
         """Shows the event
