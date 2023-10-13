@@ -124,6 +124,52 @@ def congrid(a, newdims, method="linear", centre=False, minusone=False):
         return None
 
 
+# def downsample_heatmaps_to_dimensions(heatmaps, new_height, new_width):
+#     """
+#     Downsample a list of heatmaps to specified dimensions using averaging.
+
+#     Args:
+#         heatmaps (list of numpy.ndarray): List of high-resolution heatmaps.
+#         new_height (int): The desired height of the downsampled heatmaps.
+#         new_width (int): The desired width of the downsampled heatmaps.
+
+#     Returns:
+#         list of numpy.ndarray: List of downsampled heatmaps.
+#     """
+#     downsampled_heatmaps = []
+
+#     for heatmap in heatmaps:
+#         # Get the dimensions of the original heatmap
+#         reshaped_heatmap = congrid(heatmap, (new_height, new_width), method="linear", centre=True, minusone=False)
+#         downsampled_heatmaps.append(reshaped_heatmap)
+
+#     return np.asarray(downsampled_heatmaps)
+
+
+def rebin_single(data, N):
+    import numpy as np
+    from scipy.interpolate import RegularGridInterpolator
+
+    # This function rebins a single 2D heatmap
+    x = np.linspace(0, 19, 20)
+    y = np.linspace(0, 19, 20)
+    f = RegularGridInterpolator((x, y), data)
+    x_fine = np.linspace(0, 19, 400)
+    y_fine = np.linspace(0, 19, 400)
+    mesh_x, mesh_y = np.meshgrid(x_fine, y_fine)
+    pts = np.vstack((mesh_x.ravel(), mesh_y.ravel())).T
+    fine_data = f(pts).reshape(400, 400)
+    fine_data *= np.sum(data) / np.sum(fine_data)
+    block_size = 400 // N
+    rebinned_data = np.zeros((N, N))
+    for i in range(N):
+        for j in range(N):
+            rebinned_data[j, i] = np.sum(
+                fine_data[i * block_size : (i + 1) * block_size, j * block_size : (j + 1) * block_size]
+            )
+    return rebinned_data
+
+
 def downsample_heatmaps_to_dimensions(heatmaps, new_height, new_width):
     """
     Downsample a list of heatmaps to specified dimensions using averaging.
@@ -136,14 +182,16 @@ def downsample_heatmaps_to_dimensions(heatmaps, new_height, new_width):
     Returns:
         list of numpy.ndarray: List of downsampled heatmaps.
     """
-    downsampled_heatmaps = []
 
-    for heatmap in heatmaps:
-        # Get the dimensions of the original heatmap
-        reshaped_heatmap = congrid(heatmap, (new_height, new_width), method="linear", centre=True, minusone=False)
-        downsampled_heatmaps.append(reshaped_heatmap)
+    data = heatmaps
+    N = new_height
 
-    return np.asarray(downsampled_heatmaps)
+    # This function handles a 3D array of heatmaps
+    num_heatmaps = data.shape[0]
+    rebinned_data = np.zeros((num_heatmaps, N, N))
+    for i in range(num_heatmaps):
+        rebinned_data[i] = rebin_single(data[i], N)
+    return rebinned_data
 
 
 def weighted_average_estimator(X, r):
@@ -158,6 +206,7 @@ def weighted_average_estimator(X, r):
     """
     x = (-r * X[:, 0, 0] + r * X[:, 0, 1] - r * X[:, 1, 0] + r * X[:, 1, 1]) / np.sum(X, axis=(1, 2))
     y = (-r * X[:, 0, 0] - r * X[:, 0, 1] + r * X[:, 1, 0] + r * X[:, 1, 1]) / np.sum(X, axis=(1, 2))
+
     return list(zip(x, y))
 
 
