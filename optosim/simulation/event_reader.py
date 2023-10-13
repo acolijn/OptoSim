@@ -9,7 +9,6 @@ import pandas as pd
 import matplotlib.pyplot as plt
 from matplotlib.patches import Circle, Rectangle
 
-
 class EventReader:
     """A class for reading optical simulation data from a list of files
 
@@ -41,14 +40,6 @@ class EventReader:
         Reads the configuration of the data reader
     print_config()
         Prints the configuration of the data reader
-    __iter__()
-        Returns an iterator for the data reader
-    __next__()
-        Reads the next event from the file
-    close()
-        Closes the file
-    reset()
-        Resets the reader to start from the first event in the first file
     print_event(event)
         Prints the event
     show_event(event)
@@ -56,7 +47,6 @@ class EventReader:
 
     A.P. Colijn
     """
-
     def __init__(self, filenames):
         """Initializes the data reader with a directory
 
@@ -71,172 +61,62 @@ class EventReader:
 
         A.P. Colijn
         """
-        self.filenames = filenames
-        self.file_index = 0
-        self.file = None
-        self.event_names = []
-        self.event_index = -1
 
-        self.nfiles = len(self.filenames)
-        print("number of files: ", len(self.filenames))
-        self.read_config()
+        # Load config attribute from the first file
+        with h5py.File(filenames[0], 'r') as f:
+            self.config = json.loads(f.attrs.get("config"))
 
-    def read_config(self):
-        """Reads the configuration of the data reader
+        if self.config.get('data_type_version', 1.0) == 1.0:
+            # throw an error that this version is obsolete
+            raise ValueError("Data type version 1.0 is obsolete. Please use version 2.0")
 
-        Parameters
-        ----------
-        None
+        # Load data from all files
+        self.data_dict = self._load_data(filenames)
+        self.number_of_files = len(filenames)
+        self.num_events = len(next(iter(self.data_dict.values())))  # assuming all datasets have the same length
 
-        Returns
-        -------
-        None
-
-        A.P. Colijn
-        """
-        if self.nfiles > 0:
-            with h5py.File(self.filenames[0], "r") as hf:
-                self.config = json.loads(hf.attrs["config"])
-
-            hf.close()
-
-    def print_config(self):
-        """Prints the configuration of the data reader
-
-        Parameters
-        ----------
-        None
-
-        Returns
-        -------
-        None
-
-        A.P. Colijn
-        """
-        print(self.config)
-
-    def __iter__(self):
-        """Returns an iterator for the data reader
-
-        Parameters
-        ----------
-        None
-
-        Returns
-        -------
-        self : EventReader
-            The iterator
-
-        A.P. Colijn
-        """
-        return self
-
-    def __next__(self):
-        """Reads the next event from the file
-
-        Parameters
-        ----------
-        None
-
-        Returns
-        -------
-        event_data : dict
-            The event data
-
-        A.P. Colijn
-        """
-
-        if self.config['data_type_version'] == 1.0:
-            while True:
-                # Check if it's time to load or switch to a new file
-                if self.file is None or self.event_index >= len(self.event_names) - 1:
-                    # Close current file if it exists
-                    if self.file:
-                        self.file.close()
-
-                    # Check if we're out of files to read from
-                    if self.file_index >= len(self.filenames):
-                        raise StopIteration
-
-                    # Open next file
-                    self.file = h5py.File(self.filenames[self.file_index], "r")
-                    self.file_index += 1
-                    self.event_names = list(self.file["events"].keys())
-                    self.event_index = -1
-
-                self.event_index += 1
-                event_dataset = self.file["events"][self.event_names[self.event_index]]
-                event_data = {key: event_dataset[key][()] for key in event_dataset.keys()}
-                return event_data
+        print("EventReader initialized with:")
+        print("  number of files: ", self.number_of_files)
+        print("  number of events: ", self.num_events)
+        print("  configuration: ", self.config)
             
-        elif self.config['data_type_version'] == 2.0:
-            # Check if we need to open a new file
-            if self.file is None:
-                # If we've never opened a file or have finished reading one, move to the next
-                if self.file_index >= self.nfiles:
-                    raise StopIteration
-                # Open the next file
-                self.file = h5py.File(self.filenames[self.file_index], "r")
-                self.file_index += 1
-                self.event_index = -1
-
-            # Move to the next event
-            self.event_index += 1
-            event_group = self.file["events"]
-
-            # Check if we've read all events in this file
-            if self.event_index >= event_group["number"].shape[0]:
-                # Move to the next file and recurse
-                self.file.close()
-                self.file = None
-                return self.__next__()
-
-            # Extract data for the current event
-            event_data = {key: dataset[self.event_index] for key, dataset in event_group.items()}
-            return event_data
-        else:
-            raise ValueError(f"Unsupported data type version: {self.config['data_type_version']}")
-
-
-    def close(self):
-        """Closes the file
+    def _load_data(self, filenames):
+        """Loads data from a list of files
 
         Parameters
         ----------
-        None
+        filenames : list
+            A list of filenames to read from
 
         Returns
         -------
-        None
+        data_dict : dict
+            A dictionary containing the data from all files
 
         A.P. Colijn
         """
-        if self.file:
-            self.file.close()
+        data_dicts = []        
+        for filename in filenames:
+            with h5py.File(filename, 'r') as f:
+                group = f['events']
+                data_dict = {name: np.array(dataset) for name, dataset in group.items()}
+                data_dicts.append(data_dict)
+        
+        # Now, concatenate arrays from all dictionaries along the first axis (events)
+        # Start with the first dictionary and update it with concatenated arrays from other dictionaries
+        combined_data = data_dicts[0]
+        for key in combined_data.keys():
+            combined_data[key] = np.concatenate([d[key] for d in data_dicts], axis=0)
+        
+        return combined_data
 
-    def reset(self):
-        """Resets the reader to start from the first event in the first file
-
-        Parameters
-        ----------
-        None
-
-        Returns
-        -------
-        None
-
-        A.P. Colijn
-        """
-        # If a file is currently open, close it
-        if self.file:
-            self.file.close()
-            self.file = None
-
-        # Reset indices and counters
-        self.file_index = 0
-        self.event_index = -1
-
-    def print_event(self, event):
+    def get_event(self, n):
+        if n >= self.num_events:
+            raise IndexError("Event index out of range")
+        
+        return {name: dataset[n] for name, dataset in self.data_dict.items()}
+    
+    def print_event(self, n):
         """Prints the event
 
         Parameters
@@ -250,9 +130,10 @@ class EventReader:
 
         A.P. Colijn
         """
+        event = self.get_event(n)
         print(event)
 
-    def show_event(self, event):
+    def show_event(self, n):
         """Shows the event
 
         Parameters
@@ -267,76 +148,8 @@ class EventReader:
         A.P. Colijn
         """
 
-        # Get the true position of the event
-        truth = np.array(event["true_position"])
-        # Get the size of the PMT array
-        dx = self.config["pmt"]["size"] * self.config["npmt_xy"] / 2
-        # Get the radius of the cylinder
-        radius = self.config["geometry"]["radius"]
+        event = self.get_event(n)
 
-        # Create figure
-        fig, axs = plt.subplots(1, 2, figsize=(10, 4))
-
-        # Plot fine bin signal
-        fine = np.array(event["fine_top"])
-        im = axs[0].imshow(fine.T, cmap="viridis", interpolation="nearest", origin="lower", extent=[-dx, dx, -dx, dx])
-        plt.colorbar(im, ax=axs[0])
-        axs[0].plot(truth[0], truth[1], marker="o", markersize=10, color="red", label="Marker")
-        axs[0].set_xlabel("x (cm)")
-        axs[0].set_ylabel("y (cm)")
-        axs[0].set_xlim([-radius, radius])
-        axs[0].set_ylim([-radius, radius])
-        # Draw a circle with a specified radius
-        circle = Circle((0, 0), radius, color="blue", fill=False)
-        axs[0].add_patch(circle)
-        # Draw the outline of the PMTs
-        # Iterate through PMT positions and draw green boxes
-        pmt_size = self.config["pmt"]["size"]
-        for ix in range(self.config["npmt_xy"]):
-            for iy in range(self.config["npmt_xy"]):
-                x_pmt = ix * pmt_size - dx + pmt_size / 2
-                y_pmt = iy * pmt_size - dx + pmt_size / 2
-                pmt_box = Rectangle(
-                    (x_pmt - pmt_size / 2, y_pmt - pmt_size / 2), pmt_size, pmt_size, color="white", fill=False
-                )
-                axs[0].add_patch(pmt_box)
-
-        # Plot PMT signal
-        pmt = np.array(event["pmt_top"])
-        im = axs[1].imshow(pmt.T, cmap="viridis", interpolation="nearest", origin="lower", extent=[-dx, dx, -dx, dx])
-        plt.colorbar(im, ax=axs[1])
-        axs[1].plot(truth[0], truth[1], marker="o", markersize=10, color="red", label="Marker")
-        axs[1].set_xlabel("x (cm)")
-        axs[1].set_ylabel("y (cm)")
-        axs[1].set_xlim([-radius, radius])
-        axs[1].set_ylim([-radius, radius])
-        circle = Circle((0, 0), radius, color="blue", fill=False)
-        axs[1].add_patch(circle)
-        for ix in range(self.config["npmt_xy"]):
-            for iy in range(self.config["npmt_xy"]):
-                x_pmt = ix * pmt_size - dx + pmt_size / 2
-                y_pmt = iy * pmt_size - dx + pmt_size / 2
-                pmt_box = Rectangle(
-                    (x_pmt - pmt_size / 2, y_pmt - pmt_size / 2), pmt_size, pmt_size, color="white", fill=False
-                )
-                axs[1].add_patch(pmt_box)
-
-        plt.show()
-
-    def show_event(self, event):
-        """Shows the event
-
-        Parameters
-        ----------
-        event : dict
-            The event to show
-
-        Returns
-        -------
-        None
-
-        A.P. Colijn
-        """
         # Get the true position of the event
         truth = np.array(event["true_position"])
         # Get the size of the PMT array (in the end this is a bit hackky, since the array is twic this size)
