@@ -59,23 +59,24 @@ class Generator:
         }
 
     If DATA_TYPE_VERSION = 2.0
-        TO BE IMPLEMENTED
+
+    
     """
 
-    def __init__(self, filename, config, **kwargs):
+    def __init__(self, filename, config_file, **kwargs):
         """Initializes the generator class. The configuration is read from the config file.
 
         Parameters
         ----------
         filename : str
-            Filename of output file. Needs to be an absolute path ending with .hd5f
-        config : str
+            Filename of output file. Needs to be an absolute path ending with .hdf5
+        config_file : str
             Filename of configuration file. For example: 'config_example.json'.
 
         """
 
         # Read configuration file
-        self.config_file = os.path.join(CONFIG_DIR, config)
+        self.config_file = os.path.join(CONFIG_DIR, config_file)
 
         if os.path.isfile(self.config_file):
             print("Generator::Reading configuration from file: {}".format(self.config_file))
@@ -84,8 +85,8 @@ class Generator:
             raise ValueError("Config file does not exist. {}".format(self.config_file))
 
         # Check filename extension
-        if not filename.endswith(".hd5f"):
-            raise ValueError("Filename needs to end with .hd5f")
+        if not filename.endswith(".hdf5"):
+            raise ValueError("Filename needs to end with .hdf5")
 
         # Check if the path is not a relative path
         if not os.path.isabs(filename):
@@ -96,10 +97,15 @@ class Generator:
         # Initialize the detector
         self.radius = self.config["geometry"]["radius"]
 
+        # Get nphoton range
+        self.nph_range = self.config["nphoton_per_event"]
+        self.log0 = np.log10(self.nph_range[0])
+        self.log1 = np.log10(self.nph_range[1])
+
         self.ievent = 0  # Event counter
 
         # define an optical photon
-        self.aPhoton = op.OpticalPhoton(config=self.config_file)
+        self.aPhoton = op.OpticalPhoton(config_file=self.config_file)
 
         print("Generator::Initialized generator.")
         print("Generator::Filename: {}".format(self.filename))	
@@ -108,6 +114,10 @@ class Generator:
 
     def initialize_file(self):
         """Initializes the file for writing events to."""
+
+        # Write configuration to file
+        self.config["data_type_version"] = DATA_TYPE_VERSION
+        self.file.attrs["config"] = json.dumps(self.config)
 
         if DATA_TYPE_VERSION == 1.0:
             # inefficient data structure that we started teh project with
@@ -185,12 +195,13 @@ class Generator:
         fine_signal_bot = np.zeros((nfine, nfine), dtype=np.int32)
 
         # Generate photons
-        nph_range = self.config["nphoton_per_event"]
         nphoton = 0
-        if len(nph_range) == 1:
-            nphoton = nph_range[0]
+        if len(self.nph_range) == 1:
+            nphoton = self.nph_range[0]
         else:
-            nphoton = np.random.randint(nph_range[0], nph_range[1])
+            # Generate random number of photons flat in log space
+            logran = np.random.uniform(self.log0, self.log1)
+            nphoton = int(10 ** logran)
 
         # Loop over photons
         for _ in range(nphoton):
@@ -279,11 +290,7 @@ class Generator:
 
         # Open file
         self.file = h5py.File(filename, "w")
-        # Write configuration to file
-        self.file.attrs["config"] = json.dumps(self.config)
 
-        # Create group for configuration
-        self.event_group = self.file.create_group("events")
 
         return 0
 

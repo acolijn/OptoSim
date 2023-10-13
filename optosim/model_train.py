@@ -55,7 +55,7 @@ def main():
 
     # read data
     run_id_dir = os.path.join(DATA_DIR, run_id)
-    files = glob.glob(run_id_dir + "/*.hd5f")
+    files = glob.glob(run_id_dir + "/*.hdf5")
 
     print(f"Reading data from {run_id_dir}")
     print(f"Found {len(files)} files")
@@ -85,8 +85,14 @@ def main():
         os.makedirs(MODEL_DIR)
         print(f"Created {MODEL_DIR} because it didn't exist")
 
+    # Create run_id dir in model dir if it doesn't exist
+    run_id_dir = os.path.join(MODEL_DIR, run_id)
+    if not os.path.exists(run_id_dir):
+        os.makedirs(run_id_dir)
+        print(f"Created {run_id_dir} because it didn't exist")
+
     # save
-    outfile = os.path.join(MODEL_DIR, f"model_{pmts_per_dim}x{pmts_per_dim}_{run_id}.pkl")
+    outfile = os.path.join(run_id_dir, f"model_{pmts_per_dim}x{pmts_per_dim}_{run_id}.pkl")
 
     if os.path.exists(outfile):
         print(f"WARNING: {outfile} already exists. Overwriting.")
