@@ -67,6 +67,10 @@ def main():
     X = top
     pos = [pos[:2] for pos in true_pos]  # depth is not used
 
+    # Normalise X and y such that sum is 1
+    X = [x / np.sum(x) for x in X]
+    y = [y / np.sum(y) for y in y]
+
     X_train, y_train, pos_train, X_test, y_test, pos_test = create_datasets(X, y, pos, train_fraction=0.8)
 
     y_train_downsampled = model_utils.downsample_heatmaps_to_dimensions(y_train, pmts_per_dim, pmts_per_dim)
@@ -101,7 +105,7 @@ def main():
         pickle.dump(model, f)
 
 
-def read_events(files, nmax=100_000):
+def read_events(files, nmax=1_000_000):
     """
     Read the events from the files and return the data in the correct format
 
@@ -115,36 +119,21 @@ def read_events(files, nmax=100_000):
         maximum number of events to read
     """
 
+    # This for now is still a bit silly
+    # We read 1 million events and then take the first nmax
     events = EventReader(files)
 
     # show data in directory
     show_data(DATA_DIR)
 
-    true_pos = []
-    fine_top = []
-    top = []
+    true_pos = e.data_dict["true_position"][:nmax]
+    fine_top = e.data_dict["fine_top"][:nmax]
+    top = e.data_dict["pmt_top"][:nmax]
+    n_true_photon = e.data_dict["nphoton"][:nmax]
 
-    n = 0
-
-    for i in range(events.num_events):
-        ev = events.get_event(i)
-        if n % 10_000 == 0:
-            print("processed ", n, "events")
-        n += 1
-
-        # retrieve the true hit position
-        truth = ev["true_position"]
-        true_pos.append(truth)
-
-        # get the data from the top PMT
-        pmt = ev["pmt_top"][()]
-        top.append(pmt.T)
-        fine_pmt = ev["fine_top"][()]
-        fine_top.append(fine_pmt.T)
-
-        if n >= nmax:
-            print("processed ", nmax, "events")
-            break
+    # transpose every element of top. So not top itself but every element of top
+    top = np.array([np.transpose(t) for t in top])
+    fine_top = np.array([np.transpose(t) for t in fine_top])
 
     print(f"We have {len(top)} events")
     print(f"low res PMT has shape {top[0].shape}")

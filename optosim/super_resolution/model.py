@@ -107,6 +107,9 @@ class SuperResolutionModel:
         X_low_res_flat = reshape_data(X_low_res)
         y_true_pos_flat = reshape_data(y_true_pos)
 
+        # also normalise every element to 1
+        X_low_res_flat = [x / np.sum(x) for x in X_low_res_flat]
+
         heatmap_pred, y_pred = self.predict(X_low_res_flat)
 
         mse_val = mse(y_true_pos_flat, y_pred)
