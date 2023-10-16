@@ -126,7 +126,8 @@ def read_events(files, nmax=100_000):
 
     n = 0
 
-    for ev in events:
+    for i in range(events.num_events):
+        ev = events.get_event(i)
         if n % 10_000 == 0:
             print("processed ", n, "events")
         n += 1
@@ -144,8 +145,6 @@ def read_events(files, nmax=100_000):
         if n >= nmax:
             print("processed ", nmax, "events")
             break
-
-    events.reset()
 
     print(f"We have {len(top)} events")
     print(f"low res PMT has shape {top[0].shape}")
