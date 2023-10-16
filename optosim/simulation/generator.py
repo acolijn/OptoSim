@@ -99,9 +99,7 @@ class Generator:
 
         # Get nphoton range
         self.nph_range = self.config["nphoton_per_event"]
-        self.log0 = np.log10(self.nph_range[0])
-        self.log1 = np.log10(self.nph_range[1])
-
+    
         self.ievent = 0  # Event counter
 
         # define an optical photon
@@ -199,9 +197,22 @@ class Generator:
         if len(self.nph_range) == 1:
             nphoton = self.nph_range[0]
         else:
-            # Generate random number of photons flat in log space
-            logran = np.random.uniform(self.log0, self.log1)
-            nphoton = int(10 ** logran)
+            # Generate random number of photons flat in linear of log space
+            energy_scale = self.config.get('energy_scale', 'log') # defaults to log
+
+            # Linear scale 
+            if energy_scale == 'linear':
+                nphoton = np.random.randint(self.nph_range[0], self.nph_range[1])
+
+            # Log scale
+            elif energy_scale == 'log':            
+                log0 = np.log10(self.nph_range[0])
+                log1 = np.log10(self.nph_range[1])
+                logran = np.random.uniform(log0, log1)
+                nphoton = int(10 ** logran)
+            
+            else:
+                raise ValueError("Please indicate log or linear scale in the energy_scale config")
 
         # Loop over photons
         for _ in range(nphoton):
