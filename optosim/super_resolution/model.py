@@ -142,7 +142,7 @@ class SuperResolutionModel:
         else:
             print("Loss curves not available. Ensure you have trained the models.")
 
-    def visualize_heatmaps_with_positions(self, X_low_res, X_high_res, y_true_pos, num_plots=10):
+    def visualize_heatmaps_with_positions(self, X_low_res, X_high_res, y_true_pos, num_plots=10, radius=2.5):
         """
         Visualize input and output heatmaps along with true and predicted positions.
 
@@ -161,7 +161,7 @@ class SuperResolutionModel:
 
         # Predict true positions
         X_high_res_pred, y_pred_pos = self.predict(X_low_res_flat)
-        simple_pred_pos = weighted_average_estimator(X_low_res, 2.5)
+        simple_pred_pos = weighted_average_estimator(X_low_res, radius)
 
         num_samples = num_plots
 
@@ -171,7 +171,11 @@ class SuperResolutionModel:
             # Plot input low-resolution heatmap
             plt.subplot(1, 3, 1)
             plt.imshow(
-                X_low_res[i], cmap="hot", interpolation="nearest", origin="lower", extent=[-2.5, 2.5, -2.5, 2.5]
+                X_low_res[i],
+                cmap="hot",
+                interpolation="nearest",
+                origin="lower",
+                extent=[-radius, radius, -radius, radius],
             )
             plt.scatter(y_true_pos[i, 0], y_true_pos[i, 1], c="r", marker="x", label="True Position")
             plt.scatter(y_pred_pos[i, 0], y_pred_pos[i, 1], c="b", label="Predicted Position")
@@ -185,7 +189,7 @@ class SuperResolutionModel:
                 cmap="hot",
                 interpolation="nearest",
                 origin="lower",
-                extent=[-2.5, 2.5, -2.5, 2.5],
+                extent=[-radius, radius, -radius, radius],
             )
             plt.scatter(y_true_pos[i, 0], y_true_pos[i, 1], c="r", marker="x", label="True Position")
             plt.scatter(y_pred_pos[i, 0], y_pred_pos[i, 1], c="b", label="Predicted Position")
@@ -195,7 +199,11 @@ class SuperResolutionModel:
             # Plot true and predicted positions
             plt.subplot(1, 3, 3)
             plt.imshow(
-                X_high_res[i], cmap="hot", interpolation="nearest", origin="lower", extent=[-2.5, 2.5, -2.5, 2.5]
+                X_high_res[i],
+                cmap="hot",
+                interpolation="nearest",
+                origin="lower",
+                extent=[-radius, radius, -radius, radius],
             )
             plt.scatter(y_true_pos[i, 0], y_true_pos[i, 1], c="r", marker="x", label="True Position")
             plt.scatter(y_pred_pos[i, 0], y_pred_pos[i, 1], c="b", label="Predicted Position")
