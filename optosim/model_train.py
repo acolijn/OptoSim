@@ -121,7 +121,7 @@ def read_events(files, nmax=1_000_000):
 
     # This for now is still a bit silly
     # We read 1 million events and then take the first nmax
-    events = EventReader(files)
+    e = EventReader(files)
 
     # show data in directory
     show_data(DATA_DIR)
