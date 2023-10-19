@@ -92,7 +92,7 @@ class SuperResolutionModel:
 
         return X_high_res_pred, y_true_pos_pred
 
-    def evaluate(self, X_low_res, y_true_pos):
+    def evaluate(self, X_low_res, y_true_pos, normalise=True):
         """
         Evaluate the model on a test dataset.
 
@@ -103,12 +103,14 @@ class SuperResolutionModel:
         Returns:
             dict: Evaluation metrics (e.g., MSE, R^2).
         """
+
         # Reshape the data
         X_low_res_flat = reshape_data(X_low_res)
         y_true_pos_flat = reshape_data(y_true_pos)
 
         # also normalise every element to 1
-        X_low_res_flat = [x / np.sum(x) for x in X_low_res_flat]
+        if normalise:
+            X_low_res_flat = np.array([x / np.sum(x) for x in X_low_res_flat])
 
         heatmap_pred, y_pred = self.predict(X_low_res_flat)
 

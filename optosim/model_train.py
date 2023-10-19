@@ -43,6 +43,19 @@ def argparser():
         help="Number of PMTs per dimension",
     )
 
+    parser.add_argument(
+        "--normalise",
+        action="store_true",
+        help="Normalise the data",
+    )
+
+    parser.add_argument(
+        "--name_suffix",
+        type=str,
+        default="",
+        help="Suffix to add to the model name",
+    )
+
     return parser.parse_args()
 
 
@@ -52,6 +65,8 @@ def main():
     run_id = args.run_id
     nmax = args.nmax
     pmts_per_dim = args.pmts_per_dim
+    name_suffix = args.name_suffix
+    name_suffix = "" if name_suffix == "" else "_" + name_suffix
 
     # read data
     run_id_dir = os.path.join(DATA_DIR, run_id)
@@ -67,9 +82,11 @@ def main():
     X = top
     pos = [pos[:2] for pos in true_pos]  # depth is not used
 
-    # Normalise X and y such that sum is 1
-    X = [x / np.sum(x) for x in X]
-    y = [y / np.sum(y) for y in y]
+    if args.normalise:
+        # Normalise X and y such that sum is 1
+        print("Normalising X and y such that sum is 1")
+        X = [x / np.sum(x) for x in X]
+        y = [y / np.sum(y) for y in y]
 
     X_train, y_train, pos_train, X_test, y_test, pos_test = create_datasets(X, y, pos, train_fraction=0.8)
 
@@ -96,7 +113,7 @@ def main():
         print(f"Created {run_id_dir} because it didn't exist")
 
     # save
-    outfile = os.path.join(run_id_dir, f"model_{pmts_per_dim}x{pmts_per_dim}_{run_id}.pkl")
+    outfile = os.path.join(run_id_dir, f"model_{pmts_per_dim}x{pmts_per_dim}_{run_id}{name_suffix}.pkl")
 
     if os.path.exists(outfile):
         print(f"WARNING: {outfile} already exists. Overwriting.")

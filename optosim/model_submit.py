@@ -24,6 +24,7 @@ def parse_args():
     # Arguments for the batch system
     parser.add_argument("--mem_per_cpu", help="Memory per CPU", default=8000)
     parser.add_argument("--queue", help="Queue", default="generic")
+    parser.add_argument("--name_suffix", help="Suffix to add to the job name", default="", type=str)
 
     args = parser.parse_args()
 
@@ -48,7 +49,7 @@ def main():
         echo "Running job with {i_pmts_per_dim} pmts for run {args.run_id}"
 
         # Run the job
-        python {model_train_file} --run_id={args.run_id} --nmax={args.nmax} --pmts_per_dim={i_pmts_per_dim}
+        python {model_train_file} --run_id={args.run_id} --nmax={args.nmax} --pmts_per_dim={i_pmts_per_dim} --name_suffix={args.name_suffix}
 
         echo "Finished"
 
