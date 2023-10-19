@@ -1,7 +1,8 @@
 {
     "detector": "XAMS",
-    "nevents": 10000,
+    "nevents": 5000,
     "nphoton_per_event": [100, 100000],
+    "energy_scale": "linear",
     "photon_zgen": 0.5,
     "geometry":{
         "type": "cylinder",
