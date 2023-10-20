@@ -4,7 +4,9 @@ import os
 
 
 def parse_args():
-    parser = argparse.ArgumentParser(description="Train a neural network to do super resolution")
+    parser = argparse.ArgumentParser(
+        description="Train a neural network to do super resolution. It will submit a job for each value of pmts_per_dim, running file model_train.py."
+    )
 
     # Arguments for the model_train file
     parser.add_argument("--run_id", help="Run ID", required=True)
@@ -25,6 +27,11 @@ def parse_args():
     parser.add_argument("--mem_per_cpu", help="Memory per CPU", default=8000)
     parser.add_argument("--queue", help="Queue", default="generic")
     parser.add_argument("--name_suffix", help="Suffix to add to the job name", default="", type=str)
+    parser.add_argument(
+        "--normalise",
+        action="store_true",
+        help="Normalise the data",
+    )
 
     args = parser.parse_args()
 
@@ -39,6 +46,9 @@ def main():
 
     model_train_file = os.path.join(OPTOSIM_DIR, "model_train.py")
 
+    normalise = "--normalise" if args.normalise else ""
+    name_suffix = "_" + args.name_suffix if args.name_suffix else ""
+
     for i_pmts_per_dim in args.pmts_per_dim:
         # Make jobstring
         jobstring = f"""
@@ -49,7 +59,7 @@ def main():
         echo "Running job with {i_pmts_per_dim} pmts for run {args.run_id}"
 
         # Run the job
-        python {model_train_file} --run_id={args.run_id} --nmax={args.nmax} --pmts_per_dim={i_pmts_per_dim} --name_suffix={args.name_suffix}
+        python {model_train_file} --run_id={args.run_id} --nmax={args.nmax} --pmts_per_dim={i_pmts_per_dim} --name_suffix={args.name_suffix} {normalise}
 
         echo "Finished"
 
@@ -61,8 +71,8 @@ def main():
             os.makedirs(logdir)
 
         # Make log and jobname
-        log = os.path.join(logdir, f"job_train_{args.run_id}_{i_pmts_per_dim}pmt.log")
-        jobname = f"optosim_train_{args.run_id}_{i_pmts_per_dim}pmt"
+        log = os.path.join(logdir, f"job_train_{args.run_id}_{i_pmts_per_dim}pmt{name_suffix}.log")
+        jobname = f"optosim_train_{args.run_id}_{i_pmts_per_dim}pmt{name_suffix}"
 
         # Submit the job
         submit_job(

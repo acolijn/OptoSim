@@ -92,7 +92,7 @@ class SuperResolutionModel:
 
         return X_high_res_pred, y_true_pos_pred
 
-    def evaluate(self, X_low_res, y_true_pos, normalise=True):
+    def evaluate(self, X_low_res, y_true_pos, normalise=False):
         """
         Evaluate the model on a test dataset.
 

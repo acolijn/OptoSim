@@ -46,7 +46,7 @@ def argparser():
     parser.add_argument(
         "--normalise",
         action="store_true",
-        help="Normalise the data",
+        help="Normalise X and y such that sum is 1",
     )
 
     parser.add_argument(

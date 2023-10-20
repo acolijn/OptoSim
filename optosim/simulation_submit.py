@@ -4,7 +4,9 @@ import os
 
 
 def parse_args():
-    parser = argparse.ArgumentParser()
+    parser = argparse.ArgumentParser(
+        description="Submit jobs for the simulation of the optical system. It will run the simulation_run.py script."
+    )
 
     # Arguments for the simulation
     parser.add_argument("--config", help="Configuration file", default="config_example.json")
