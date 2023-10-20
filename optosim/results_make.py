@@ -1,7 +1,7 @@
 from optosim.results.results import Results
 
 for normalise in [False, True]:
-    for i in [1, 2]:
+    for i in [2, 1]:
         train_run_id = f"mc00{i}0"
 
         for test_run_id in [f"mc00{i}0", f"mc00{i}1", f"mc00{i}2"]:

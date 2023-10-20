@@ -392,7 +392,12 @@ class Results:
         for model in [self.stupid_model_name, self.great_model_name, self.finest_model_name]:
             _pmts = self.results[model]["PMTs"]
             fig, ax = plot_2d_histogram_with_weights(
-                self.pos_test, self.results[model]["pred"], model, f"{_pmts}x{_pmts} PMTs"
+                self.pos_test,
+                self.results[model]["pred"],
+                model,
+                f"{_pmts}x{_pmts} PMTs",
+                radius=self.radius,
+                cylinder_radius=self.cylinder_radius,
             )
             save_figure(fig, f"xy_2dhist_with_weights{self.id}-{_pmts}x{_pmts}pmts", save=self.save_figures)
 
@@ -562,7 +567,14 @@ def plot_statistics(x_data, bins, binned_statistic_list, labels):
 
 
 def plot_2d_histogram_with_weights(
-    true_pos, predicted_pos, model_name, model_details, bins=50, range=((-5, 5), (-5, 5))
+    true_pos,
+    predicted_pos,
+    model_name,
+    model_details,
+    bins=50,
+    range=((-5, 5), (-5, 5)),
+    radius=2.54,
+    cylinder_radius=3.2,
 ):
     """
     Plot a 2D histogram for the deviation in x and y positions.
@@ -614,7 +626,7 @@ def plot_2d_histogram_with_weights(
         fontsize=16,
     )
 
-    plot_pmt_and_tpc(ax, r=2.54, cylinder_radius=3.2, which="pmt")
+    plot_pmt_and_tpc(ax, radius=radius, cylinder_radius=cylinder_radius, which="pmt")
 
     return fig, ax
 
