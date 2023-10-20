@@ -92,29 +92,32 @@ class SuperResolutionModel:
 
         return X_high_res_pred, y_true_pos_pred
 
-    def evaluate(self, X_low_res, X_high_res, y_true_pos):
+    def evaluate(self, X_low_res, y_true_pos, normalise=False):
         """
         Evaluate the model on a test dataset.
 
         Args:
             X_low_res (array-like): Input data for low-resolution to high-resolution network.
-            X_high_res (array-like): Input data for high-resolution to true position network.
             y_true_pos (array-like): Ground truth true position data.
 
         Returns:
             dict: Evaluation metrics (e.g., MSE, R^2).
         """
+
         # Reshape the data
         X_low_res_flat = reshape_data(X_low_res)
-        X_high_res_flat = reshape_data(X_high_res)
         y_true_pos_flat = reshape_data(y_true_pos)
 
-        _, y_pred = self.predict(X_low_res_flat)
+        # also normalise every element to 1
+        if normalise:
+            X_low_res_flat = np.array([x / np.sum(x) for x in X_low_res_flat])
+
+        heatmap_pred, y_pred = self.predict(X_low_res_flat)
 
         mse_val = mse(y_true_pos_flat, y_pred)
         r_squared_val = r_squared(y_true_pos_flat, y_pred)
 
-        return {"MSE": mse_val, "R^2": r_squared_val}
+        return {"MSE": mse_val, "R^2": r_squared_val, "pred": y_pred, "pred_heatmap": heatmap_pred}
 
     def plot_loss_curve(self):
         """

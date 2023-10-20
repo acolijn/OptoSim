@@ -9,6 +9,7 @@ import pandas as pd
 import matplotlib.pyplot as plt
 from matplotlib.patches import Circle, Rectangle
 
+
 class EventReader:
     """A class for reading optical simulation data from a list of files
 
@@ -47,6 +48,7 @@ class EventReader:
 
     A.P. Colijn
     """
+
     def __init__(self, filenames):
         """Initializes the data reader with a directory
 
@@ -63,10 +65,10 @@ class EventReader:
         """
 
         # Load config attribute from the first file
-        with h5py.File(filenames[0], 'r') as f:
+        with h5py.File(filenames[0], "r") as f:
             self.config = json.loads(f.attrs.get("config"))
 
-        if self.config.get('data_type_version', 1.0) == 1.0:
+        if self.config.get("data_type_version", 1.0) == 1.0:
             # throw an error that this version is obsolete
             raise ValueError("Data type version 1.0 is obsolete. Please use version 2.0")
 
@@ -79,7 +81,7 @@ class EventReader:
         print("  number of files: ", self.number_of_files)
         print("  number of events: ", self.num_events)
         print("  configuration: ", self.config)
-            
+
     def _load_data(self, filenames):
         """Loads data from a list of files
 
@@ -95,27 +97,27 @@ class EventReader:
 
         A.P. Colijn
         """
-        data_dicts = []        
+        data_dicts = []
         for filename in filenames:
-            with h5py.File(filename, 'r') as f:
-                group = f['events']
+            with h5py.File(filename, "r") as f:
+                group = f["events"]
                 data_dict = {name: np.array(dataset) for name, dataset in group.items()}
                 data_dicts.append(data_dict)
-        
+
         # Now, concatenate arrays from all dictionaries along the first axis (events)
         # Start with the first dictionary and update it with concatenated arrays from other dictionaries
         combined_data = data_dicts[0]
         for key in combined_data.keys():
             combined_data[key] = np.concatenate([d[key] for d in data_dicts], axis=0)
-        
+
         return combined_data
 
     def get_event(self, n):
         if n >= self.num_events:
             raise IndexError("Event index out of range")
-        
+
         return {name: dataset[n] for name, dataset in self.data_dict.items()}
-    
+
     def print_event(self, n):
         """Prints the event
 
@@ -295,6 +297,7 @@ def show_data(data_dir):
         "scatter",
         "experimental_scatter_model",
         "radius",
+        "energy_scale",
     ]
     # Filter the list to include only columns that exist in the DataFrame
     cols = [col for col in cols if col in df.columns]

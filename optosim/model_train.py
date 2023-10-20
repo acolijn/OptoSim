@@ -43,6 +43,19 @@ def argparser():
         help="Number of PMTs per dimension",
     )
 
+    parser.add_argument(
+        "--normalise",
+        action="store_true",
+        help="Normalise X and y such that sum is 1",
+    )
+
+    parser.add_argument(
+        "--name_suffix",
+        type=str,
+        default="",
+        help="Suffix to add to the model name",
+    )
+
     return parser.parse_args()
 
 
@@ -52,6 +65,8 @@ def main():
     run_id = args.run_id
     nmax = args.nmax
     pmts_per_dim = args.pmts_per_dim
+    name_suffix = args.name_suffix
+    name_suffix = "" if name_suffix == "" else "_" + name_suffix
 
     # read data
     run_id_dir = os.path.join(DATA_DIR, run_id)
@@ -66,6 +81,12 @@ def main():
     y = fine_top  # downsample if wanted
     X = top
     pos = [pos[:2] for pos in true_pos]  # depth is not used
+
+    if args.normalise:
+        # Normalise X and y such that sum is 1
+        print("Normalising X and y such that sum is 1")
+        X = [x / np.sum(x) for x in X]
+        y = [y / np.sum(y) for y in y]
 
     X_train, y_train, pos_train, X_test, y_test, pos_test = create_datasets(X, y, pos, train_fraction=0.8)
 
@@ -92,7 +113,7 @@ def main():
         print(f"Created {run_id_dir} because it didn't exist")
 
     # save
-    outfile = os.path.join(run_id_dir, f"model_{pmts_per_dim}x{pmts_per_dim}_{run_id}.pkl")
+    outfile = os.path.join(run_id_dir, f"model_{pmts_per_dim}x{pmts_per_dim}_{run_id}{name_suffix}.pkl")
 
     if os.path.exists(outfile):
         print(f"WARNING: {outfile} already exists. Overwriting.")
@@ -101,7 +122,7 @@ def main():
         pickle.dump(model, f)
 
 
-def read_events(files, nmax=100_000):
+def read_events(files, nmax=1_000_000):
     """
     Read the events from the files and return the data in the correct format
 
@@ -115,37 +136,21 @@ def read_events(files, nmax=100_000):
         maximum number of events to read
     """
 
-    events = EventReader(files)
+    # This for now is still a bit silly
+    # We read 1 million events and then take the first nmax
+    e = EventReader(files)
 
     # show data in directory
     show_data(DATA_DIR)
 
-    true_pos = []
-    fine_top = []
-    top = []
+    true_pos = e.data_dict["true_position"][:nmax]
+    fine_top = e.data_dict["fine_top"][:nmax]
+    top = e.data_dict["pmt_top"][:nmax]
+    n_true_photon = e.data_dict["nphoton"][:nmax]
 
-    n = 0
-
-    for ev in events:
-        if n % 10_000 == 0:
-            print("processed ", n, "events")
-        n += 1
-
-        # retrieve the true hit position
-        truth = ev["true_position"]
-        true_pos.append(truth)
-
-        # get the data from the top PMT
-        pmt = ev["pmt_top"][()]
-        top.append(pmt.T)
-        fine_pmt = ev["fine_top"][()]
-        fine_top.append(fine_pmt.T)
-
-        if n >= nmax:
-            print("processed ", nmax, "events")
-            break
-
-    events.reset()
+    # transpose every element of top. So not top itself but every element of top
+    top = np.array([np.transpose(t) for t in top])
+    fine_top = np.array([np.transpose(t) for t in fine_top])
 
     print(f"We have {len(top)} events")
     print(f"low res PMT has shape {top[0].shape}")
